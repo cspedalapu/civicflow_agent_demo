@@ -1,0 +1,30 @@
+{
+  "catalog_id": "TX_DPS_DL_faq_sections_links_v1",
+  "scope": "Texas DPS Driver License FAQ Sections",
+  "source_url": "https://www.dps.texas.gov/section/driver-license/driver-license-still-have-questions-find-your-answers-here",
+  "sections": [
+    {"section_id": "sec_01", "title": "Applying for or Renewing a DL/ID/CDL", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-1-applying-or-renewing-dlidcdl"},
+    {"section_id": "sec_02", "title": "Scheduling a Road Test", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-2-scheduling-road-test"},
+    {"section_id": "sec_03", "title": "Issuing a Temporary Permit", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-3-issuing-temporary-permit"},
+    {"section_id": "sec_04", "title": "Lost or Stolen Driver License/ID Card", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-4-lost-or-stolen-driver-licenseid-card"},
+    {"section_id": "sec_05", "title": "Issuing a Driver Record", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-5-issuing-driver-record"},
+    {"section_id": "sec_06", "title": "Reporting an Error on a DL/ID", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-6-reporting-error-dlid"},
+    {"section_id": "sec_07", "title": "Reinstatement Fees", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-7-reinstatement-fees"},
+    {"section_id": "sec_08", "title": "Failure to Appear / Failure to Pay (FTA/FTP)", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-8-failure-appear-and-failure-pay-ftaftp"},
+    {"section_id": "sec_09", "title": "SR-22 (Proof of Financial Responsibility)", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-9-sr-22-proof-financial-responsibility"},
+    {"section_id": "sec_10", "title": "Driving While License Invalid (DWLI)", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-10-driving-while-license-invalid-dwli"},
+    {"section_id": "sec_11", "title": "Medical Advisory Board (MAB)", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-11-medical-advisory-board-mab"},
+    {"section_id": "sec_12", "title": "Occupational License", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-12-occupational-license"},
+    {"section_id": "sec_13", "title": "Drug Education", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-13-drug-education"},
+    {"section_id": "sec_14", "title": "Commercial Driver License (CDL) FAQ", "url": "https://www.dps.texas.gov/section/driver-license/faq/commercial-driver-license-cdl-frequently-asked-question"},
+    {"section_id": "sec_15", "title": "Non-Resident Violator Compact (NRVC)", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-15-non-resident-violator-compact-nrvc"},
+    {"section_id": "sec_16", "title": "Crash/Judgment", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-16-crashjudgment"},
+    {"section_id": "sec_17", "title": "Driving While Intoxicated (DWI)", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-17-driving-while-intoxicated-dwi"},
+    {"section_id": "sec_18", "title": "Interlock", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-18-interlock"},
+    {"section_id": "sec_19", "title": "Administrative License Revocation (ALR)", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-19-administrative-license-revocation-alr"},
+    {"section_id": "sec_20", "title": "Vehicle Registration", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-20-vehicle-registration"},
+    {"section_id": "sec_21", "title": "License and Permit Specialist Responsibilities / DL Division FAQs", "url": "https://www.dps.texas.gov/section/driver-license/license-and-permit-specialist-responsibilities-and-faqs-about-driver-license"},
+    {"section_id": "sec_22", "title": "Driver Responsibility Program (DRP)", "url": "https://www.dps.texas.gov/section/driver-license/faq/section-22-driver-responsibility-program-drp"},
+    {"section_id": "sec_23", "title": "Request Knowledge Tests by Driver Education Schools", "url": "https://www.dps.texas.gov/section/driver-license/section-23-request-knowledge-tests-driver-education-schools"}
+  ]
+}

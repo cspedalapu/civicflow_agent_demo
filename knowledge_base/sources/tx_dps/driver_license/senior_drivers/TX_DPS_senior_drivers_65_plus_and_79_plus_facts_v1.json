@@ -1,0 +1,53 @@
+{
+  "facts_id": "TX_DPS_senior_drivers_65_plus_and_79_plus_facts_v1",
+  "source_url": "https://www.dps.texas.gov/section/driver-license/senior-drivers-age-79-or-older",
+  "page_date": "2020-09-28",
+  "retrieved_at": "2026-01-22",
+  "senior_65_plus_online_id_option": {
+    "available": true,
+    "purpose": "Voluntarily surrender driver license and apply for a Texas identification card (ID) without visiting an office",
+    "eligibility": [
+      "Age 65+",
+      "U.S. citizen",
+      "Holds a REAL ID compliant Texas driver license or commercial driver license"
+    ],
+    "how_to": [
+      "Create or sign in to a Texas-by-Texas (TxT) account (Texas.gov)",
+      "Select 'Surrender DL for ID' and submit required verification information (identity, citizenship, age)"
+    ],
+    "status_phone": "1-866-357-3639",
+    "status_phone_label": "1-866-DL-RENEW"
+  },
+  "drivers_79_plus_renewal_rules": {
+    "in_person_required": true,
+    "license_term_by_age": [
+      {"age_range": "79-84", "license_term": "8-year license"},
+      {"age_range": "85+", "license_term": "2-year license"}
+    ],
+    "office_visit_steps": [
+      "Schedule an appointment at local driver license office",
+      "Complete driver license application (online or at office)",
+      "Specialist reviews application/medical history for additional testing needs",
+      "Provide required documentation (application; citizenship/lawful presence as applicable; identity proof)",
+      "Provide biometrics (signature and thumbprints)",
+      "Photo taken",
+      "Pay fee",
+      "Pass vision exam"
+    ]
+  },
+  "testing_policy": {
+    "mandatory_tests_based_only_on_age": false,
+    "possible_additional_requirements_if_concern": [
+      "Skills evaluation may be requested",
+      "Additional medical information from a doctor may be requested"
+    ],
+    "reference": "Texas Medical Evaluation Process for Driver Licensing page is linked from the senior drivers page"
+  },
+  "linked_resources": [
+    "Transportation Code 521.274",
+    "Transportation Code 521.2711",
+    "National Safety Council (NSC)",
+    "AARP",
+    "Texas Department of State Health Services (DSHS)"
+  ]
+}

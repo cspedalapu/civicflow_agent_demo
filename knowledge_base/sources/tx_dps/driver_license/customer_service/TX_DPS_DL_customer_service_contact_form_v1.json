@@ -1,0 +1,15 @@
+{
+  "doc_id": "TX_DPS_DL_customer_service_contact_form_v1",
+  "title": "Customer Service - Contact Us about applying for, renewing, updating Licenses/ID cards! | Texas DPS",
+  "jurisdiction": "Texas",
+  "agency": "Texas Department of Public Safety (DPS)",
+  "domain": "Driver License & Identification",
+  "service_category": "Customer Service / Contact",
+  "source_type": "url",
+  "source_url": "https://www.dps.texas.gov/apps/DriverLicense/customer_service/Other.aspx",
+  "page_date": null,
+  "retrieved_at": "2026-01-22",
+  "content_hash": "TO_FILL_BY_PIPELINE",
+  "language": "en",
+  "notes": "Official Driver License Customer Service contact web form (category selector + required question field + reCAPTCHA) and phone contact details (512-424-2600; M–F 7:00am–5:30pm excluding holidays)."
+}

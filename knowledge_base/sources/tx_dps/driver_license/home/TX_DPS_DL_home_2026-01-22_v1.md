@@ -1,0 +1,44 @@
+# Texas DPS — Driver License (Home / Service Overview)
+
+Source: https://www.dps.texas.gov/section/driver-license
+Publisher: Texas Department of Public Safety (DPS)
+Captured type: URL (web page)
+Retrieved at: 2026-01-22
+
+## Operational Alert
+- Non-Domicile Commercial Driver License (CDL) and Non-Domicile Commercial Learners Permit (CLP) issuance is temporarily halted effective 09/29/2025 (including first-time applications, renewals, and duplicates).
+
+## What this organization provides (Driver License & ID scope)
+- DPS issues Texas driver licenses that are valid for up to eight years (for Texas residents).
+- Driver license offices offer services by appointment only. Same-day appointments may be available at select offices.
+- DPS offers online transactions for eligible services; customers can check whether they must visit an office or can complete the transaction online.
+
+## Popular Services (official entry points)
+- Assistance for People with Disabilities (ADA accommodations request):
+  https://www.dps.texas.gov/apps/DriverLicense/customer_service/ADA.aspx
+- Schedule an Appointment (info page):
+  https://www.dps.texas.gov/section/driver-license/driver-license-services-appointments
+- Schedule an Appointment (scheduler):
+  https://www.txdpsscheduler.com/
+
+
+## Key Service Pages linked from this home page
+- DL Requirements:
+  https://www.dps.texas.gov/section/driver-license/requirements
+- Online Services / Online Options:
+  https://www.dps.texas.gov/section/driver-license/online-services
+- Identification Card Services (ID Cards):
+  https://www.dps.texas.gov/section/driver-license/how-apply-texas-identification-card
+- Commercial Driver License (CDL Requirements):
+  https://www.dps.texas.gov/section/commercial-driver-license
+- Most Common DL Topics (“How Can We Help?”):
+  https://www.dps.texas.gov/section/driver-license/how-can-we-help
+- Suspensions & Reinstatements:
+  https://www.dps.texas.gov/section/driver-license/suspensions-reinstatements
+- Resources:
+  https://www.dps.texas.gov/section/driver-license/resources
+
+## Online Services highlights (high-level)
+- Many Texas DL/ID cards can be renewed up to two years before and after expiration.
+- Some transactions (e.g., replacement, change address, update emergency contacts) may be possible without visiting an office.
+- Some DL/ID transactions can be conducted by telephone or by mail.

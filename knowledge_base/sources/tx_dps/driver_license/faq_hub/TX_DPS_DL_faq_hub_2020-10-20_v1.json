@@ -1,0 +1,15 @@
+{
+  "doc_id": "TX_DPS_DL_faq_hub_2020-10-20_v1",
+  "title": "Driver License - Still have questions? Find your answers here. | Texas DPS",
+  "jurisdiction": "Texas",
+  "agency": "Texas Department of Public Safety (DPS)",
+  "domain": "Driver License & Identification",
+  "service_category": "FAQ Hub",
+  "source_type": "url",
+  "source_url": "https://www.dps.texas.gov/section/driver-license/driver-license-still-have-questions-find-your-answers-here",
+  "page_date": "2020-10-20",
+  "retrieved_at": "2026-01-22",
+  "content_hash": "TO_FILL_BY_PIPELINE",
+  "language": "en",
+  "notes": "FAQ hub that links to multiple topic-based FAQ sections (each section contains multiple Q&A pairs)."
+}

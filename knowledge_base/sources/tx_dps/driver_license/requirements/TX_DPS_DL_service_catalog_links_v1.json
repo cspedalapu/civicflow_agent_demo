@@ -1,0 +1,22 @@
+{
+  "catalog_id": "TX_DPS_DL_links_v1",
+  "scope": "Texas DPS Driver License & ID",
+  "source_url": "https://www.dps.texas.gov/section/driver-license/requirements",
+  "links": {
+    "apply_texas_driver_license": "https://www.dps.texas.gov/section/driver-license/apply-texas-driver-license",
+    "commercial_driver_license_cdl": "https://www.dps.texas.gov/section/commercial-driver-license",
+    "duplicate_license_id_replace": "https://www.dps.texas.gov/section/driver-license/replace-your-driver-license-commercial-driver-license-or-id-card",
+    "renew_dl_cdl_motorcycle_id": "https://www.dps.texas.gov/section/driver-license/renew-your-texas-dl-cdl-motorcycle-license-or-id",
+    "change_information_dl_id": "https://www.dps.texas.gov/section/driver-license/how-change-information-your-driver-license-or-id-card",
+    "motorcycle_license": "https://www.dps.texas.gov/section/driver-license/motorcycle-license",
+    "teen_learners_license": "https://www.dps.texas.gov/section/driver-license/texas-learners-license-teen",
+    "teen_provisional_license": "https://www.dps.texas.gov/section/driver-license/texas-provisional-license-teen",
+    "seniors_79_or_older": "https://www.dps.texas.gov/section/driver-license/senior-drivers-age-79-or-older",
+    "veteran_services": "https://www.dps.texas.gov/section/driver-license/driver-license-and-identification-services-veterans",
+    "election_identification_certificate_eic": "https://www.dps.texas.gov/section/driver-license/election-identification-certificate-eic",
+    "apply_texas_id_card": "https://www.dps.texas.gov/section/driver-license/how-apply-texas-identification-card",
+    "online_services": "https://www.dps.texas.gov/section/driver-license/online-services",
+    "real_id_document_check": "https://www.dps.texas.gov/apps/DriverLicense/RealID/",
+    "schedule_appointment": "https://public.txdpsscheduler.com/"
+  }
+}

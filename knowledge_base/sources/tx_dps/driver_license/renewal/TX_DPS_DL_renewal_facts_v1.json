@@ -1,0 +1,73 @@
+{
+  "facts_id": "TX_DPS_DL_renewal_facts_v1",
+  "source_url": "https://www.dps.texas.gov/section/driver-license/renew-your-texas-dl-cdl-motorcycle-license-or-id",
+  "page_date": "2020-09-29",
+  "renewal_window": {
+    "standard_before_expiry_years": 2,
+    "standard_after_expiry_years": 2,
+    "cdl_before_expiry_years": 1,
+    "notes": "CDL can only be renewed up to 1 year before expiration; otherwise renewals are allowed up to 2 years before/after expiration."
+  },
+  "renewal_methods": ["online", "telephone", "mail", "in_person"],
+  "online_phone": {
+    "start_url_texas_gov_txt": "https://txt.texas.gov/dps/driver-license-id-renewal-replacement",
+    "phone_number": "1-866-357-3639",
+    "phone_label": "1-866-DL RENEW",
+    "dl_eligibility_requirements": [
+      "Renewed in person last time",
+      "Class C/M/CM OR CDL without Hazmat endorsement (Hazmat cannot renew online)",
+      "Expires within 2 years OR expired less than 2 years",
+      "Under 79 years of age",
+      "No significant vision/physical/mental health impact since last renewal",
+      "CDL only: valid medical certificate on file",
+      "License valid (not suspended/revoked/canceled/denied/disqualified); no outstanding warrants/tickets",
+      "U.S. citizen with Social Security number on record",
+      "Special case: will be 18 within 30 days and holds provisional license"
+    ],
+    "id_eligibility_requirements": [
+      "Renewed ID in person last time",
+      "Expires within 2 years OR expired less than 2 years",
+      "Age 18+",
+      "U.S. citizen with Social Security number on record"
+    ],
+    "what_you_need": [
+      "Most recently issued DL/ID and audit number",
+      "Printer or email address for temporary license and receipt (not available by phone)",
+      "Valid credit card (MasterCard/Visa/Discover/American Express)",
+      "Last four digits of SSN"
+    ],
+    "license_eligibility_link": "https://txapps.texas.gov/txapp/txdps/dleligibility/login.do",
+    "emergency_contact_update_online": true
+  },
+  "mail_in": {
+    "requires_invitation": true,
+    "notes": "If invited to renew by mail, follow instructions on mailed form; online/phone also available if eligible."
+  },
+  "in_person": {
+    "when_required": "If not eligible for online, telephone, or mail renewal",
+    "appointments_info_url": "https://www.dps.texas.gov/section/driver-license/driver-license-services-appointments",
+    "application_pdf_url": "https://www.dps.texas.gov/internetforms/Forms/DL-14A.pdf",
+    "required_document_links": {
+      "citizenship_or_lawful_presence": "https://www.dps.texas.gov/section/driver-license/us-citizenship-or-lawful-presence-requirement",
+      "identity_requirements": "https://www.dps.texas.gov/section/driver-license/identification-requirements"
+    },
+    "fees_url": "https://www.dps.texas.gov/section/driver-license/driver-license-fees",
+    "process_steps": [
+      "Schedule appointment",
+      "Complete application",
+      "Provide required documentation",
+      "Provide biometrics (signature and thumbprints)",
+      "Photo taken",
+      "Pay fee",
+      "Pass vision exam"
+    ],
+    "provisional_under_18_extra": "Must be accompanied by a parent or legal guardian."
+  },
+  "expired_more_than_2_years": {
+    "can_renew": false,
+    "apply_pages": {
+      "apply_driver_license": "https://www.dps.texas.gov/section/driver-license/apply-texas-driver-license",
+      "apply_id_card": "https://www.dps.texas.gov/section/driver-license/how-apply-texas-identification-card"
+    }
+  }
+}

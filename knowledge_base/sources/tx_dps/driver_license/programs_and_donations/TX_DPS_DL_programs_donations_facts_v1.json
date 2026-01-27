@@ -1,0 +1,75 @@
+{
+  "facts_id": "TX_DPS_DL_programs_donations_facts_v1",
+  "source_url": "https://www.dps.texas.gov/section/driver-license/voluntary-contributions-and-programs-information",
+  "page_date": "2022-06-16",
+  "availability_notes": [
+    "Contribution opportunities and program information are made available in all driver license offices.",
+    "Donations may also be made online during driver license and identification card transactions.",
+    "Contribution opportunities can only be made when conducting a driver license or identification card transaction and may not be available for all transactions."
+  ],
+  "programs": [
+    {
+      "name": "Donate Life Texas",
+      "type": "Organ, eye, and tissue donor registry (after-death donation registration via DPS)",
+      "who_can_participate": "Applicants/renewals for Texas DL, ID, or CDL during transaction",
+      "key_note": "Registration through DPS covers donation after death only (not living donation).",
+      "external_links": ["https://www.donatelifetexas.org"]
+    },
+    {
+      "name": "Living Organ Donation (Information)",
+      "type": "Information on living donation (kidney or part of liver)",
+      "eligibility_high_level": "Potential living donor must be 18+ and in good physical and mental health; screening required.",
+      "external_links": [
+        "https://www.livingdonorassistance.org",
+        "https://unosgroup.org",
+        "https://www.donatelifetexas.org",
+        "https://www.livingbank.org",
+        "https://www.lifegift.org",
+        "https://www.dshs.texas.gov"
+      ]
+    },
+    {
+      "name": "Glenda Dawson Donate Life Texas Donor Registry",
+      "type": "Donation-funded registry named in honor of Glenda Dawson",
+      "external_links": ["https://www.dshs.texas.gov"]
+    },
+    {
+      "name": "Blindness Education Screening and Treatment Program (BEST)",
+      "type": "Free vision screenings + financial assistance for medically urgent eye treatment (with ophthalmologist referral)",
+      "who_can_donate": "Applicants/renewals for Texas DL or ID during transaction",
+      "external_links": ["https://www.hhs.texas.gov"]
+    },
+    {
+      "name": "Texas Veterans Assistance Fund",
+      "type": "Voluntary contribution fund supporting veterans in need",
+      "who_can_donate": "Applicants/renewals for Texas DL or ID during transaction",
+      "assists_with_examples": [
+        "Therapy",
+        "Acute/chronic needs contributing to homelessness",
+        "Critical home repairs and accessibility improvements for service-connected disabled",
+        "Rehabilitation support for justice-involved veterans through specialized courts"
+      ],
+      "external_links": [
+        "https://www.tvc.texas.gov",
+        "https://www.dps.texas.gov/section/driver-license/driver-license-and-identification-services-veterans"
+      ]
+    },
+    {
+      "name": "Survivors of Sexual Assault (Evidence Testing Support)",
+      "type": "Voluntary contributions supporting testing of collected evidence for sexual assault/sex offenses",
+      "legal_basis": "House Bill 1729 (85th Texas Legislature)",
+      "administered_by": "Criminal Justice Division of the Office of the Governor (grant program)"
+    },
+    {
+      "name": "Texas Bone Marrow Donation & Transplant",
+      "type": "Bone marrow donor recruitment program (education + recruitment)",
+      "legal_basis": "House Bill 780 (87th Texas Legislature)",
+      "external_links": ["https://www.dshs.texas.gov"]
+    },
+    {
+      "name": "Identification Fee Exemption Fund",
+      "type": "Assists in payment of DL/ID fees for foster and homeless children/youths and victims/children of family or dating violence",
+      "legal_basis": "House Bill 123 (86th Texas Legislature)"
+    }
+  ]
+}

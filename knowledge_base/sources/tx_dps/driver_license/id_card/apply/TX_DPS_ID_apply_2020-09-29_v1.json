@@ -1,0 +1,15 @@
+{
+  "doc_id": "TX_DPS_ID_apply_2020-09-29_v1",
+  "title": "How to Apply for a Texas Identification Card | Texas DPS",
+  "jurisdiction": "Texas",
+  "agency": "Texas Department of Public Safety (DPS)",
+  "domain": "Driver License & Identification",
+  "service_category": "ID Card — Apply (Process & Requirements)",
+  "source_type": "url",
+  "source_url": "https://www.dps.texas.gov/section/driver-license/how-apply-texas-identification-card",
+  "page_date": "2020-09-29",
+  "retrieved_at": "2026-01-22",
+  "content_hash": "TO_FILL_BY_PIPELINE",
+  "language": "en",
+  "notes": "Official application steps and proof requirements for Texas ID card; includes SSN verification rule, appointment requirement, biometrics/photo steps, delivery timeline, and special notes for veterans, temporary visitors, address confidentiality, DL surrender rule, and 65+ online surrender-to-ID option via TxT."
+}

@@ -1,0 +1,15 @@
+{
+  "doc_id": "TX_DPS_DL_requirements_2025-01-31_v1",
+  "title": "Requirements | Texas DPS Driver License",
+  "jurisdiction": "Texas",
+  "agency": "Texas Department of Public Safety (DPS)",
+  "domain": "Driver License & Identification",
+  "service_category": "Requirements / Service Index",
+  "source_type": "url",
+  "source_url": "https://www.dps.texas.gov/section/driver-license/requirements",
+  "page_date": "2025-01-31",
+  "retrieved_at": "2026-01-22",
+  "content_hash": "TO_FILL_BY_PIPELINE",
+  "language": "en",
+  "notes": "Index page containing appointment-only notice, Online Services link, REAL ID checklist link, and canonical lists of related services and resources."
+}

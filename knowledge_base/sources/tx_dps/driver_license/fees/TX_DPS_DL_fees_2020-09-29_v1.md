@@ -1,0 +1,67 @@
+# Texas DPS — Driver License Fees (DL/ID/CDL)
+
+Source: https://www.dps.texas.gov/section/driver-license/driver-license-fees  
+Publisher: Texas Department of Public Safety (DPS)  
+Page date: 2020-09-29  
+Captured type: URL (web page)
+
+## Payment Methods
+Driver license offices accept credit cards, cash, checks and money orders.
+
+## Notes
+- A $1 administrative fee is included in the listed amounts.
+- The $1 administrative fee is not charged for transactions conducted through the mail.
+
+## Driver License (Class A, B, or C)
+- Under 18 (new): $16 — Expires on your 18th birthday
+- Age 18 to 84 (new): $33 — Expires after eight years (on your birthday)
+- Age 18 to 84 (renewal): $33 — Expires eight years after previous expiration date
+- Age 85 and older (new): $9 — Expires after two years (on your birthday)
+- Age 85 and older (renewal): $9 — Expires two years after previous expiration date
+- Disabled veterans (60%) (new or renewal): Free — Requirements apply
+- Replacement driver license: $11 — Current expiration date does not change
+  - Replace lost/stolen/damaged license
+  - Change address or name
+  - Test to add/remove restrictions
+  - Learner license—under 18 (new): $16 — Expires on your 18th birthday
+
+## Motorcycle (with Driver License: Class AM/BM/CM)
+- Add motorcycle to existing driver license: $16 — DL expiration date does not change
+- New Texas driver license + add motorcycle: $48 — Expires when DL expires (depends on age)
+- Renew Texas driver license with motorcycle: $44
+
+## Motorcycle License (Class M only)
+- New: $33 — Expiration depends on age (see driver license section)
+- Renewal: $44 — Expiration depends on age (see driver license section)
+- Learner license for motorcycle (Class M only), under 18: $16 — Expires on your 18th birthday
+
+## Limited Term Driver License
+- For temporary visitors to the U.S.: $33 — Expires when lawful presence expires, or in one year if lawful presence is “duration of status”
+
+## Occupational Driver License
+- New or renewal: $10 per year — Issued up to two years (reinstatement fees may apply)
+- Add interlock restriction: $10 (reinstatement fees may apply)
+
+## Identification (ID) Card Fees
+- Age 59 and younger (new): $16 — Expires after six years (on your birthday)
+- Age 59 and younger (renewal): $16 — Expires six years after previous expiration date
+- Age 60 and older (new or renewal): $6 — Expires after six years (on your birthday)
+- Replacement ID card: $11 — Current expiration date does not change
+  - Replace lost/stolen/damaged ID card
+  - Change address or name
+- Limited term ID card (temporary visitors): $16 — Expires when lawful presence expires, or in one year if lawful presence is “duration of status”
+
+## Commercial Driver License (CDL) Fees
+- CDL age 18 to 84 (new): $97 — Expires in eight years
+- CDL age 18 to 84 (renewal): $97 — Expires eight years after previous expiration date
+- CDL with Hazardous Materials Endorsement (new): $61 — Expires in five years
+- CDL with Hazardous Materials Endorsement (renewal): $61 — Expires in five years
+- CDL age 85 and older (new): $26 — Expires after two years (on your birthday)
+- CDL age 85 and older (renewal): $26 — Expires two years after previous expiration date
+- Replacement CDL / CLP: $11 — Current expiration date does not change
+- Commercial Learners Permit (CLP): $25 — Original or renewal
+- Motorcycle with CDL:
+  - New—add to CDL fee: $15
+  - Renewal—add to CDL renewal fee: $8
+  - Add motorcycle to existing CDL: $16
+- Non-domiciled CDL (non-U.S. residents): $121 — Expires when lawful presence expires (as determined by DHS)

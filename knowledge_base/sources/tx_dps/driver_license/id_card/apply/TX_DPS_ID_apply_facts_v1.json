@@ -1,0 +1,76 @@
+{
+  "facts_id": "TX_DPS_ID_apply_facts_v1",
+  "source_url": "https://www.dps.texas.gov/section/driver-license/how-apply-texas-identification-card",
+  "page_date": "2020-09-29",
+  "id_card_validity_years": 6,
+  "proof_requirements": [
+    "U.S. citizenship OR evidence of lawful presence",
+    "Texas residency",
+    "Identity",
+    "Social Security Number (SSN)"
+  ],
+  "ssn_verification": {
+    "required": true,
+    "method": "Verified electronically with the U.S. government",
+    "failure_outcome": "If SSN cannot be verified, the ID card cannot be issued or renewed",
+    "info_url": "https://www.dps.texas.gov/section/driver-license/social-security-number"
+  },
+  "preparation_tool": {
+    "name": "REAL ID Document Check Application",
+    "url": "https://www.dps.texas.gov/section/driver-license/real-id",
+    "purpose": "Generates a customized checklist of documents to bring for the office visit"
+  },
+  "apply_in_person_steps": [
+    "Complete the identification card application before arriving (also available at offices)",
+    "Make an appointment at a driver license office",
+    "Present application + required proof documents (lawful presence, residency, identity)",
+    "Provide signature",
+    "Provide thumbprints",
+    "Have photo taken",
+    "Pay application fee"
+  ],
+  "links": {
+    "application_form": "https://www.dps.texas.gov/internetforms/Forms/DL-14A.pdf",
+    "appointments_info": "https://www.dps.texas.gov/section/driver-license/driver-license-services-appointments",
+    "fees": "https://www.dps.texas.gov/section/driver-license/driver-license-fees",
+    "mailing_status": "https://www.dps.texas.gov/section/driver-license/wheres-my-driver-license-or-id-card",
+    "lawful_presence": "https://www.dps.texas.gov/section/driver-license/us-citizenship-or-lawful-presence-requirement",
+    "texas_residency": "https://www.dps.texas.gov/section/driver-license/texas-residency-requirements",
+    "identity_requirements": "https://www.dps.texas.gov/section/driver-license/identification-requirements"
+  },
+  "post_visit": {
+    "temporary_id_issued": true,
+    "accuracy_check_required_before_leaving": true,
+    "mail_delivery_timeframe": "Approximately 2–3 weeks"
+  },
+  "eligibility_restriction": {
+    "cannot_hold_dl_and_id": true,
+    "rule_text": "If applicant holds a driver license, they are no longer eligible to apply for an ID card unless they surrender the driver license at the time of application"
+  },
+  "special_populations": {
+    "disabled_veterans_fee_exemption_possible": {
+      "info_url": "https://www.dps.texas.gov/section/driver-license/driver-license-and-identification-services-veterans"
+    },
+    "temporary_visitors_foreign_students_additional_requirements": {
+      "info_url": "https://www.dps.texas.gov/section/driver-license/us-citizenship-or-lawful-presence-requirement"
+    },
+    "address_confidentiality_program": {
+      "info_url": "https://www.dps.texas.gov/section/driver-license/address-confidentiality-program"
+    }
+  },
+  "online_option_seniors_65_plus": {
+    "available": true,
+    "eligibility": [
+      "Age 65 or older",
+      "U.S. citizen",
+      "Currently holds a REAL ID compliant Texas DL or CDL"
+    ],
+    "process": [
+      "Create/sign in to TxT account at Texas.gov",
+      "Select 'Surrender DL for ID' option and submit verification info"
+    ],
+    "status_phone": "1-866-357-3639",
+    "status_phone_label": "1-866-DL-RENEW",
+    "texas_gov_url": "https://www.texas.gov/"
+  }
+}

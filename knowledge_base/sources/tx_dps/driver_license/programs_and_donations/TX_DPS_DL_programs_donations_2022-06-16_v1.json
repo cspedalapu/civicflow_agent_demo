@@ -1,0 +1,15 @@
+{
+  "doc_id": "TX_DPS_DL_programs_donations_2022-06-16_v1",
+  "title": "Voluntary Contributions and Programs Information | Texas DPS",
+  "jurisdiction": "Texas",
+  "agency": "Texas Department of Public Safety (DPS)",
+  "domain": "Driver License & Identification",
+  "service_category": "Programs and Donations",
+  "source_type": "url",
+  "source_url": "https://www.dps.texas.gov/section/driver-license/voluntary-contributions-and-programs-information",
+  "page_date": "2022-06-16",
+  "retrieved_at": "2026-01-22",
+  "content_hash": "TO_FILL_BY_PIPELINE",
+  "language": "en",
+  "notes": "Lists voluntary contribution opportunities/programs available during DL/ID/CDL transactions (office and sometimes online), including organ donation registry, BEST, veterans fund, sexual assault evidence testing support, bone marrow donor program, and ID fee exemption fund."
+}

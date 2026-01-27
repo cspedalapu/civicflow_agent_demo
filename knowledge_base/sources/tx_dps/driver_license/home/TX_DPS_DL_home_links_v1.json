@@ -1,0 +1,19 @@
+{
+  "catalog_id": "TX_DPS_DL_home_links_v1",
+  "scope": "Texas DPS Driver License & ID (Home)",
+  "source_url": "https://www.dps.texas.gov/section/driver-license",
+  "popular_services": {
+    "ada_assistance_disabilities": "https://www.dps.texas.gov/apps/DriverLicense/customer_service/ADA.aspx",
+    "schedule_appointment_info": "https://www.dps.texas.gov/section/driver-license/driver-license-services-appointments",
+    "schedule_appointment_scheduler": "https://www.txdpsscheduler.com/"
+  },
+
+  "core_service_pages": {
+    "dl_requirements": "https://www.dps.texas.gov/section/driver-license/requirements",
+    "online_services": "https://www.dps.texas.gov/section/driver-license/online-services",
+    "apply_texas_id_card": "https://www.dps.texas.gov/section/driver-license/how-apply-texas-identification-card",
+    "commercial_driver_license": "https://www.dps.texas.gov/section/commercial-driver-license",
+    "most_common_dl_topics": "https://www.dps.texas.gov/section/driver-license/how-can-we-help",
+    "resources": "https://www.dps.texas.gov/section/driver-license/resources"
+  }
+}

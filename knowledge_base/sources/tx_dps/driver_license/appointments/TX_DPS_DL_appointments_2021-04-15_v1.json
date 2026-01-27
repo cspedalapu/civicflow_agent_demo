@@ -1,0 +1,15 @@
+{
+  "doc_id": "TX_DPS_DL_appointments_2021-04-15_v1",
+  "title": "Driver License Services – Appointments | Texas DPS",
+  "jurisdiction": "Texas",
+  "agency": "Texas Department of Public Safety (DPS)",
+  "domain": "Driver License & Identification",
+  "service_category": "Appointments (In-office DL/ID services)",
+  "source_type": "url",
+  "source_url": "https://www.dps.texas.gov/section/driver-license/driver-license-services-appointments",
+  "page_date": "2021-04-15",
+  "retrieved_at": "2026-01-22",
+  "content_hash": "TO_FILL_BY_PIPELINE",
+  "language": "en",
+  "notes": "Authoritative appointment policy and FAQs: appointment-only rule, same-day release behavior, building entry exceptions, payment guidance, cancellation/arrival windows, reschedule rules, and scheduler link."
+}

@@ -1,0 +1,62 @@
+{
+  "facts_id": "TX_DPS_DL_fees_facts_v1",
+  "source_url": "https://www.dps.texas.gov/section/driver-license/driver-license-fees",
+  "page_date": "2020-09-29",
+  "payment_methods": ["credit card", "cash", "check", "money order"],
+  "admin_fee_note": {
+    "included_in_listed_amounts": true,
+    "amount_usd": 1,
+    "not_charged_if_by_mail": true
+  },
+  "fees_usd": {
+    "driver_license_class_abc": {
+      "under_18_new": 16,
+      "age_18_84_new": 33,
+      "age_18_84_renewal": 33,
+      "age_85_plus_new": 9,
+      "age_85_plus_renewal": 9,
+      "disabled_veterans_60_percent_new_or_renewal": 0,
+      "replacement": 11
+    },
+    "motorcycle_with_driver_license_am_bm_cm": {
+      "add_to_existing_dl": 16,
+      "new_dl_plus_motorcycle": 48,
+      "renew_dl_with_motorcycle": 44
+    },
+    "motorcycle_class_m_only": {
+      "new": 33,
+      "renewal": 44,
+      "learner_under_18": 16
+    },
+    "limited_term_driver_license": {
+      "temporary_visitors": 33
+    },
+    "occupational_driver_license": {
+      "new_or_renewal_per_year": 10,
+      "max_years": 2,
+      "add_interlock_restriction": 10
+    },
+    "identification_card": {
+      "age_59_or_younger_new": 16,
+      "age_59_or_younger_renewal": 16,
+      "age_60_or_older_new_or_renewal": 6,
+      "replacement": 11,
+      "limited_term_temporary_visitors": 16
+    },
+    "commercial_driver_license": {
+      "cdl_age_18_84_new": 97,
+      "cdl_age_18_84_renewal": 97,
+      "cdl_hazmat_new": 61,
+      "cdl_hazmat_renewal": 61,
+      "cdl_age_85_plus_new": 26,
+      "cdl_age_85_plus_renewal": 26,
+      "replacement_cdl_or_clp": 11,
+      "clp_original": 25,
+      "clp_renewal": 25,
+      "motorcycle_with_cdl_add_new": 15,
+      "motorcycle_with_cdl_add_renewal": 8,
+      "motorcycle_add_to_existing_cdl": 16,
+      "non_domiciled_cdl_non_us_resident": 121
+    }
+  }
+}

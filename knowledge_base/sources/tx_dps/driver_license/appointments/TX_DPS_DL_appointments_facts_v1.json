@@ -1,0 +1,44 @@
+{
+  "facts_id": "TX_DPS_DL_appointments_facts_v1",
+  "source_url": "https://www.dps.texas.gov/section/driver-license/driver-license-services-appointments",
+  "page_date": "2021-04-15",
+  "scheduler_url": "https://www.txdpsscheduler.com/",
+  "in_office_services": {
+    "appointment_only": true,
+    "encourage_online_services": true,
+    "same_day_appointments": {
+      "available": true,
+      "notes": "A limited number of additional appointments are released at most offices daily and made available throughout the day; these can be scheduled online."
+    }
+  },
+  "building_entry_policy": {
+    "only_customers_allowed": true,
+    "exceptions": [
+      "ADA accommodations",
+      "customers with small children",
+      "elderly persons",
+      "business needs (parental authorization, residency/address change, etc.)"
+    ]
+  },
+  "payment_policy": {
+    "preferred": ["credit card"],
+    "accepted": ["money order", "cashier's check", "personal check"],
+    "conditions": ["for the correct amount"]
+  },
+  "faq_operational_rules": {
+    "schedule_window_max_months": 6,
+    "late_cancellation_minutes": 30,
+    "arrive_no_earlier_minutes": 30,
+    "no_appointment_option": "If arriving without an appointment, customer may use a self-service kiosk to schedule if available that day, or schedule another day/location.",
+    "reschedule_process": "Reschedule via scheduler; existing appointment is automatically cancelled upon confirmation of a new appointment.",
+    "confirmation_process": "Provided at booking; can be obtained later by logging back into scheduler.",
+    "notifications": {
+      "available": true,
+      "channels": ["email", "text message"],
+      "recommendation": "Adding a valid email is best for receiving pertinent information."
+    },
+    "no_local_office_listed_reason": "If local office is not listed, there are no available appointments; select next closest office.",
+    "service_not_listed_option": true,
+    "online_eligibility_check": "Scheduler may advise if eligible to complete service online via Texas.gov."
+  }
+}

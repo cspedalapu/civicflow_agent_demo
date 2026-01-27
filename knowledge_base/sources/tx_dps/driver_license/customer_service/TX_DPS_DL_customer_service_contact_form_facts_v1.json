@@ -1,0 +1,39 @@
+{
+  "facts_id": "TX_DPS_DL_customer_service_contact_form_facts_v1",
+  "source_url": "https://www.dps.texas.gov/apps/DriverLicense/customer_service/Other.aspx",
+  "retrieved_at": "2026-01-22",
+  "contact_channels": {
+    "web_form": {
+      "url": "https://www.dps.texas.gov/apps/DriverLicense/customer_service/Other.aspx",
+      "requires_recaptcha": true,
+      "inquiry_categories": [
+        "Appointment",
+        "CDL",
+        "DL/ID Inquiry",
+        "Driver License Eligibility",
+        "Driver Record",
+        "Other"
+      ],
+      "question_field_required": true
+    },
+    "phone": {
+      "number": "512-424-2600",
+      "hours": "Monday–Friday 7:00 am–5:30 pm (excluding holidays)",
+      "notes": [
+        "Automated menu routes calls to the right team",
+        "Wait times can exceed 20 minutes during peak time due to high call volume",
+        "Tip: Call 7:00 am–8:00 am for non-peak time"
+      ]
+    }
+  },
+  "agent_link_sharing_rule": {
+    "when_user_requests_contact_link": [
+      "Share the web form URL",
+      "Optionally provide phone number and hours"
+    ],
+    "when_user_requests_to_speak_to_agent": [
+      "Provide phone number",
+      "Provide hours and non-peak tip"
+    ]
+  }
+}

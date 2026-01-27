@@ -1,0 +1,73 @@
+{
+  "provider": "TX_DPS",
+  "jurisdiction": "Texas",
+  "kb_root": "knowledge_base",
+  "services": [
+    {
+      "service_id": "service_catalog",
+      "name": "Available Services",
+      "source_paths": [],
+      "keywords": ["services", "what can you do", "help with", "options", "categories", "support"]
+    },
+    {
+      "service_id": "dl_appointments",
+      "name": "Driver License Appointments",
+      "source_paths": ["sources/tx_dps/driver_license/appointments"],
+      "keywords": ["appointment", "schedule", "booking", "book", "reschedule", "cancel", "slot", "time"]
+    },
+    {
+      "service_id": "dl_requirements",
+      "name": "Driver License Requirements",
+      "source_paths": ["sources/tx_dps/driver_license/requirements"],
+      "keywords": ["requirements", "documents", "proof", "bring", "eligibility", "first time", "apply"]
+    },
+    {
+      "service_id": "dl_fees",
+      "name": "Driver License Fees",
+      "source_paths": ["sources/tx_dps/driver_license/fees"],
+      "keywords": ["fee", "fees", "cost", "price", "payment", "pay", "charge"]
+    },
+    {
+      "service_id": "id_card",
+      "name": "Texas ID Card",
+      "source_paths": ["sources/tx_dps/driver_license/id_card"],
+      "keywords": ["id card", "state id", "identification", "texas id"]
+    },
+    {
+      "service_id": "renewal",
+      "name": "Renewal",
+      "source_paths": ["sources/tx_dps/driver_license/renewal"],
+      "keywords": ["renew", "renewal", "extend", "expiration", "expired"]
+    },
+    {
+      "service_id": "senior_drivers",
+      "name": "Senior Drivers",
+      "source_paths": ["sources/tx_dps/driver_license/senior_drivers"],
+      "keywords": ["senior", "elder", "older", "age", "over 79", "over 80"]
+    },
+    {
+      "service_id": "customer_service",
+      "name": "Customer Service",
+      "source_paths": ["sources/tx_dps/driver_license/customer_service"],
+      "keywords": ["contact", "support", "help", "phone", "email", "customer service"]
+    },
+    {
+      "service_id": "faq_hub",
+      "name": "FAQs",
+      "source_paths": ["sources/tx_dps/driver_license/faq_hub"],
+      "keywords": ["faq", "questions", "common questions", "help"]
+    },
+    {
+      "service_id": "home",
+      "name": "Home / Overview",
+      "source_paths": ["sources/tx_dps/driver_license/home"],
+      "keywords": ["overview", "home", "main", "driver license"]
+    },
+    {
+      "service_id": "programs_and_donations",
+      "name": "Programs and Donations",
+      "source_paths": ["sources/tx_dps/driver_license/programs_and_donations"],
+      "keywords": ["program", "donation", "donate", "support program"]
+    }
+  ]
+}

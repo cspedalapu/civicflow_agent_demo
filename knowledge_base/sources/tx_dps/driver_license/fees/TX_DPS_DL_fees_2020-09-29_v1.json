@@ -1,0 +1,15 @@
+{
+  "doc_id": "TX_DPS_DL_fees_2020-09-29_v1",
+  "title": "Driver License Fees | Texas DPS",
+  "jurisdiction": "Texas",
+  "agency": "Texas Department of Public Safety (DPS)",
+  "domain": "Driver License & Identification",
+  "service_category": "Fees",
+  "source_type": "url",
+  "source_url": "https://www.dps.texas.gov/section/driver-license/driver-license-fees",
+  "page_date": "2020-09-29",
+  "retrieved_at": "2026-01-22",
+  "content_hash": "TO_FILL_BY_PIPELINE",
+  "language": "en",
+  "notes": "Official fee table for DL/ID/CDL including administrative fee note and payment methods."
+}

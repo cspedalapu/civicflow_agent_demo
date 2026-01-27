@@ -1,0 +1,18 @@
+# Texas DPS — FAQ Section 3: Issuing A Temporary Permit
+
+Source: https://www.dps.texas.gov/section/driver-license/faq/section-3-issuing-temporary-permit  
+Publisher: Texas Department of Public Safety (DPS)  
+Page date: 2020-11-18  
+Retrieved at: 2026-01-22  
+
+---
+
+## Q1. How long is my temporary driver license valid?
+A temporary driver license is valid for 60 days from the date of your driver license transaction. You may check the mailing status of your card here:
+- Where’s my driver license or ID card?: https://www.dps.texas.gov/section/driver-license/wheres-my-driver-license-or-id-card
+
+---
+
+## Q2. I still cannot find the answer to my question, what do I do?
+If you do not find the answer to your question within these FAQs, you can contact the DPS Customer Service Center for assistance:
+- Contact page: https://www.dps.texas.gov/apps/DriverLicense/customer_service/Other.aspx

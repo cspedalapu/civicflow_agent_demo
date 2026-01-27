@@ -1,0 +1,15 @@
+{
+  "doc_id": "TX_DPS_senior_drivers_65_plus_and_79_plus_2020-09-28_v1",
+  "title": "Senior Drivers - Age 65 or Older | Texas DPS",
+  "jurisdiction": "Texas",
+  "agency": "Texas Department of Public Safety (DPS)",
+  "domain": "Driver License & Identification",
+  "service_category": "Senior Drivers (65+ ID option; 79+ in-person renewal rules)",
+  "source_type": "url",
+  "source_url": "https://www.dps.texas.gov/section/driver-license/senior-drivers-age-79-or-older",
+  "page_date": "2020-09-28",
+  "retrieved_at": "2026-01-22",
+  "content_hash": "TO_FILL_BY_PIPELINE",
+  "language": "en",
+  "notes": "Defines senior workflows: (1) 65+ may voluntarily surrender REAL ID DL/CDL and apply online for Texas ID via TxT; (2) 79+ must renew DL in person with age-based renewal period; includes office-visit steps, doc requirements, vision exam, and testing policy (no mandatory tests solely by age)."
+}

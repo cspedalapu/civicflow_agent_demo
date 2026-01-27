@@ -1,0 +1,15 @@
+{
+  "doc_id": "TX_DPS_DL_renewal_2020-09-29_v1",
+  "title": "Renew Your Texas DL, CDL, Motorcycle License or ID | Texas DPS",
+  "jurisdiction": "Texas",
+  "agency": "Texas Department of Public Safety (DPS)",
+  "domain": "Driver License & Identification",
+  "service_category": "Renewal (DL/CDL/Motorcycle/ID)",
+  "source_type": "url",
+  "source_url": "https://www.dps.texas.gov/section/driver-license/renew-your-texas-dl-cdl-motorcycle-license-or-id",
+  "page_date": "2020-09-29",
+  "retrieved_at": "2026-01-22",
+  "content_hash": "TO_FILL_BY_PIPELINE",
+  "language": "en",
+  "notes": "Official DPS renewal rules and methods including renewal windows, online/telephone eligibility requirements, required items (audit number, SSN last-4, credit card), mail-in option, in-person steps and required documents, and rule for DL/ID expired >2 years."
+}

@@ -1,0 +1,152 @@
+# Texas DPS — Commercial Driver License (CDL) Frequently Asked Questions
+
+Source: https://www.dps.texas.gov/section/driver-license/faq/commercial-driver-license-cdl-frequently-asked-question  
+Publisher: Texas Department of Public Safety (DPS)  
+Page date: 2020-11-18  
+Retrieved at: 2026-01-22  
+
+---
+
+## Section A — Commercial Driver License (CDL) Frequently Asked Question
+
+### Q1. If I am applying for a commercial learner permit (CLP) for the first time must Entry Level Driving Training (ELDT) be completed before obtaining a CLP?
+No, ELDT is not required to be completed prior to obtaining a CLP.
+
+### Q2. When is ELDT required?
+Beginning February 7, 2022, DPS staff must query the Training Provider Registry to determine if ELDT requirements have been met. ELDT is a national standard for obtaining a CDL and applies to drivers seeking to:
+- Obtain a CDL for the first time
+- Upgrade an existing CDL to Class B or A
+- Obtain a new hazmat, passenger, or school bus endorsement  
+States must electronically verify training completion before administering a CDL skills test or before a hazmat knowledge test.
+
+### Q3. How long am I required to hold a Commercial Learners Permit (CLP) before I am permitted to take a road test?
+Texas Transportation Code Section 522.014 requires a CLP to be held for a minimum of 14 days.
+
+### Q4. I am a CDL holder with a requirement to have an interlock device on my vehicle, what do I do if it cannot be installed on my company vehicle?
+DPS will issue a license with a P39 restriction, permitting operation of a company vehicle without an interlock device when driving is essential to the job. When operating the company vehicle, you must carry a letter on company letterhead acknowledging the employer is aware of the P39 restriction.  
+Note: This does not apply if the CDL driver is disqualified (an occupational driver license cannot be issued to a CDL holder).
+
+### Q5. How much does it cost to obtain a CDL license?
+DPS directs customers to the Driver License Division Fees page; CDL license cost is listed under “Commercial Driver License (CDL) Fees.”
+- Driver License Division Fees: https://www.dps.texas.gov/section/driver-license/driver-license-fees
+
+### Q6. Can I renew my CDL online?
+Yes, a Texas CDL may be renewed online if specific eligibility requirements are met. DPS directs customers to:
+- Renew Your Texas DL, CDL, Motorcycle License or ID: https://www.dps.texas.gov/section/driver-license/renew-your-texas-dl-cdl-motorcycle-license-or-id
+
+### Q7. I drive a recreational vehicle; do I still need a CDL license?
+DPS states you need to obtain an exempt Class A or B driver license. DPS directs customers to:
+- Classes of Driver Licenses: https://www.dps.texas.gov/section/driver-license/classes-driver-licenses
+
+### Q8. How do I obtain a vision waiver?
+As of January 1, 2023, the Texas Vision Waiver program is no longer available due to changes in federal regulations. DPS notes that individuals who previously relied on the program to operate CMVs may be eligible under new federal alternative vision standards.  
+Individuals currently holding a Texas Vision Waiver must comply with the new standards by December 1, 2024, or by the medical certificate expiration date (whichever occurs first).
+
+### Q9. Am I able to complete my skills exam through a third party or in another state?
+Yes. Authorized third-party providers and out-of-state skills testing providers transmit exam scores electronically. DPS advises confirming exam scores have been submitted before scheduling an appointment.
+
+### Q10. Why does an out of state conviction show up on my driving record when I did not have a Texas CDL at the time?
+DPS states that when you transfer your CDL to Texas, the Department is required to transfer your out-of-state driver history information so you have a single complete driver record, citing 49 CFR 384.206(b). DPS refers to FMCSA for additional information.
+
+### Q11. Why did I receive a notice of suspension for an out-of-state conviction?
+DPS states that for certain offenses, the Department is required by state and federal statutes to disqualify a CDL, citing 49 CFR 383.51. The disqualification period depends on the violation. DPS refers to FMCSA for additional information.
+
+### Q12. I still cannot find the answer to my question, what do I do?
+DPS directs customers to contact the Customer Service Center:
+- Contact: https://www.dps.texas.gov/section/driver-license/contact
+
+---
+
+## Section B — National Registry of Certified Medical Examiners (NRCME) and CDL Medical Examiner Certification
+
+### Q1. Is it necessary to fax, mail, or email my medical certificate to the CDL Help Desk?
+Effective June 23, 2025, CDL drivers and CLP holders are no longer required to submit medical certificates directly to DPS.
+
+### Q2. Do I still need to present my medical certificate at a driver license office?
+As of June 23, 2025, direct submission of medical certificates to DPS by CDL and CLP drivers has been discontinued.
+
+### Q3. How long does it take for DPS to receive my medical certification information from National Registry after my medical examination?
+DPS states NRCME transmits medical certification data to DPS within a few days.
+
+### Q4. How can I verify that my medical certification has been updated in my record?
+DPS directs customers to verify status via Driver Eligibility:
+- Driver Eligibility: https://txapps.texas.gov/txapp/txdps/dleligibility/login.do
+
+### Q5. Why is direct submission of medical certification certificates to DPS no longer required?
+DPS states an automated system has been implemented, eliminating the need for manual submission and streamlining processing.
+
+### Q6. What should I do if there is an error on my medical certificate?
+Return to your medical provider to correct any errors.
+
+### Q7. My medical certificate was rejected due to self-certification issues. How do I resolve this?
+Return to your medical provider for correction. If the provider confirms the certificate is accurate, schedule an appointment at a driver license office to update your certification (DPS provides a scheduling link on the page).
+
+### Q8. My CLP or CDL was downgraded. How can I have it upgraded?
+If downgraded due to an expired Medical Examiner’s Certificate, you must visit a driver license office for an upgrade. DPS notes a CDL downgraded to Class C solely for failure to provide a valid medical variance or Medical Examiner’s Certificate may be upgraded back without retesting if all conditions are met:
+- Record status is “Eligible” (not suspended, revoked, disqualified, or canceled)
+- License has not been expired more than two years
+- Downgrade occurred within the last 12 months
+- Valid medical variance or Medical Examiner’s Certificate is submitted to the National Registry (NRII)
+- Applicable transaction fees apply
+
+### Q9. I was downgraded to a non-commercial driver license. Do I need to retake the driving tests?
+If downgraded solely due to an expired medical certificate, and your license has not expired, and you have not completed a license transaction since the downgrade, you do not need to retake driving tests. If the license was voluntarily surrendered or downgraded, retesting is required.
+
+### Q10. How long is my Medical Examiner's Certificate good for?
+Maximum of 24 months; a medical examiner may issue for a shorter duration based on medical monitoring needs.
+
+### Q11. When a CDL license is downgraded, what is the cost to upgrade the license back to its previous CDL status?
+DPS states it may cost up to $97 to upgrade back to a CDL.
+
+### Q12. Most medical certificates are issued for a period of 2 years. Why is my medical certificate only good for 1 year or less?
+DPS states a medical examiner may issue a certificate for a shorter duration if closer monitoring is needed.
+
+### Q13. I still cannot find the answer to my question, what do I do?
+DPS directs customers to contact the Customer Service Center:
+- Contact: https://www.dps.texas.gov/section/driver-license/contact
+
+---
+
+## Section C — Drug and Alcohol Clearinghouse (DACH)
+
+### Q1. I received a downgrade letter for the Drug and Alcohol Clearinghouse. How do I upgrade back to my CDL?
+DPS instructs drivers to visit the Drug and Alcohol Clearinghouse (DACH) to view violation information and requirements for returning to duty. DPS notes it will be notified electronically and that the driver will receive a reinstatement notice with additional requirements.
+- Drug and Alcohol Clearinghouse: https://clearinghouse.fmcsa.dot.gov/
+
+### Q2. I still cannot find the answer to my question, what do I do?
+DPS directs customers to contact the Customer Service Center:
+- Contact: https://www.dps.texas.gov/section/driver-license/contact
+
+---
+
+## Section D — Non-Domicile Commercial Driver License (CDL) and Non-Domicile Commercial Learners Permit (CLP)
+
+### Q1. Why was my CLP/CDL canceled/downgraded?
+DPS states a review showed the CLP/CDL was not issued according to federal regulations in place prior to the September 29, 2025 Interim Final Rule, requiring DPS to cancel the license and disqualify the commercial driving privilege.
+
+### Q2. How can I get my CLP/CDL back?
+DPS indicates that once issuance of non-domiciled CLP/CDLs begins again, reapplication may be possible if lawful presence is H-2B, H-2A, or E-2. DPS lists documents to bring (if not already provided):
+- Unexpired foreign passport
+- Unexpired Form I-94/I-94A with eligible category codes (H-2B, H-2A, or E-2)
+- Social Security card (if not already provided)
+- Two documents proving Texas residency (if not already provided)  
+If status is not H-2B/H-2A/E-2, DPS indicates reapplication would be eligible once permanent residence status is obtained.
+
+### Q3. If my lawful presence status changes, can I get my CLP/CDL back?
+Yes. DPS states if status changes to an eligible category (H-2B/H-2A/E-2) or you obtain a Permanent Resident Card, you can reapply.
+
+### Q4. Can I get a refund for my cancelled CLP/CDL or my outstanding CDL knowledge or skills test transaction?
+DPS states refunds will not be issued for fees or transactions processed prior to the September 29, 2025 regulatory change date.
+
+### Q5. When will DPS start the reissuance of non-domiciled CLPs/CDLs?
+DPS states the website will be updated once reissuance begins.
+
+### Q6. Do I have to retest to get my CLP/CDL back if I currently have a permanent resident card?
+No. DPS states if you currently possess a Permanent Resident Card, your CLP/CDL will be upgraded without testing.
+
+### Q7. If I bring in my H-2B, H-2A, or E-2 documentation can I be upgraded?
+DPS states DPS has currently halted all non-domiciled CDL issuance, and the website will be updated when issuance begins.
+
+### Q8. If I have been downgraded, will I receive a new driver license in the mail?
+DPS states no. You may continue to operate non-commercial vehicles using your valid card in your possession. If you want a replacement license showing updated non-commercial classification, or you possess a Permanent Resident card and want to apply to upgrade back to a CDL, DPS directs scheduling an appointment:
+- Scheduler: https://www.txdpsscheduler.com/

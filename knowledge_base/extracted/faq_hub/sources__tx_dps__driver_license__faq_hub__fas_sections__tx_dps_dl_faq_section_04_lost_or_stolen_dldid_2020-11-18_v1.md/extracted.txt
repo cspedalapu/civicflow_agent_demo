@@ -1,0 +1,70 @@
+# Texas DPS — FAQ Section 4: Lost or Stolen Driver License/ID Card
+
+Source: https://www.dps.texas.gov/section/driver-license/faq/section-4-lost-or-stolen-driver-licenseid-card  
+Publisher: Texas Department of Public Safety (DPS)  
+Page date: 2020-11-18  
+Retrieved at: 2026-01-22  
+
+---
+
+## Q1. What documents will I need to bring to the driver license office to replace my lost driver license or identification card?
+DPS directs customers to the replacement page for the requirements and instructions:
+- How to Replace your Driver License, Commercial Driver License or ID Card: https://www.dps.texas.gov/section/driver-license/replace-your-driver-license-commercial-driver-license-or-id-card
+
+---
+
+## Q2. How much will it cost to get my driver license/ID card replaced?
+DPS states it costs **$11** to get a duplicate driver license/ID card.
+
+---
+
+## Q3. Can I order a replacement for my driver license/ID card online?
+Yes. DPS states you must know your **name, date of birth, most recent audit number, and last four digits of your Social Security number** to log in and order a duplicate online. For details, DPS points to:
+- How to Replace your Driver License, Commercial Driver License or ID Card: https://www.dps.texas.gov/section/driver-license/replace-your-driver-license-commercial-driver-license-or-id-card
+
+---
+
+## Q4. I am a resident of Texas who is currently in another state and I have lost my driver license or identification card. What do I need to do to get it replaced?
+DPS states the simplest option is to request a **replacement online**. To confirm whether you have the information needed for online replacement, DPS directs customers to:
+- Driver License Renewal, Replacement or Change of Address (Texas.gov): https://txapps.texas.gov/txapp/txdps/dleligibility/login.do  
+- Driver License Renewal, Replacement or Change of Address (Texas.gov entry page): https://txapps.texas.gov/txapp/txdps/dleligibility/login.do  
+
+If you do not have the information needed to replace it online, DPS instructs customers to complete an application for replacement **by mail** and submit it for processing (application link is provided on the page).
+
+---
+
+## Q5. I have been a victim of identity theft. Is it possible to get a new driver license/ID card?
+DPS directs customers to:
+- Identity Theft Information Guide: https://www.dps.texas.gov/section/driver-license/identity-theft-information-guide  
+- How to Replace your Driver License, Commercial Driver License or ID Card: https://www.dps.texas.gov/section/driver-license/replace-your-driver-license-commercial-driver-license-or-id-card
+
+---
+
+## Q6. What do I do if my driver license or identification card has been stolen?
+DPS states:
+- If your DL/ID has been stolen and used by someone else, you must **file a police report**.
+- To replace the stolen card, follow the replacement steps and **bring a copy of your police report**.
+- DPS staff will determine whether issuing a **new number** is necessary when reviewing your case.
+
+DPS also points customers to:
+- Identity Theft Information Guide: https://www.dps.texas.gov/section/driver-license/identity-theft-information-guide  
+- How to Replace your Driver License, Commercial Driver License or ID Card: https://www.dps.texas.gov/section/driver-license/replace-your-driver-license-commercial-driver-license-or-id-card
+
+---
+
+## Q7. If I need to replace my license, do I have to go to a driver license office in the county that I reside in?
+No. DPS states you may visit **any driver license office in Texas** to obtain a replacement DL/ID card. You may also be eligible to obtain a replacement online. DPS points to:
+- How to Replace your Driver License, Commercial Driver License or ID Card: https://www.dps.texas.gov/section/driver-license/replace-your-driver-license-commercial-driver-license-or-id-card
+
+---
+
+## Q8. I am not a resident of Texas. However, an officer took my license during a traffic stop in Texas and failed to return it. What should I do?
+DPS states you can either:
+- Contact the law enforcement agency in the city/county you were traveling through, **or**
+- Contact the Department of Motor Vehicles in your home state for license replacement guidance.
+
+---
+
+## Q9. I still cannot find the answer to my question, what do I do?
+If the answer is not listed in the FAQs, DPS directs customers to contact the Customer Service Center:
+- Contact: https://www.dps.texas.gov/section/driver-license/contact

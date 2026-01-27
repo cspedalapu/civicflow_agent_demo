@@ -1,0 +1,67 @@
+# Texas DPS — Senior Drivers (Age 65+ and Renewal Rules for 79+)
+
+Source: https://www.dps.texas.gov/section/driver-license/senior-drivers-age-79-or-older
+Publisher: Texas Department of Public Safety (DPS)
+Page date: 2020-09-28
+Captured type: URL (web page)
+Retrieved at: 2026-01-22
+
+---
+
+## Part A — Apply Online for an Identification Card (Seniors 65+)
+Seniors age 65 or older may voluntarily surrender their driver license and apply for a Texas identification card (ID) without visiting a driver license office if:
+- They are a U.S. Citizen, and
+- They hold a REAL ID compliant Texas driver license or commercial driver license.
+
+How to use:
+1) Create or sign in to a Texas-by-Texas (TxT) account (Texas.gov).
+2) Select the “Surrender DL for ID” option and submit required information to verify identity, citizenship, and age.
+
+Status help:
+- Call 1-866-DL-RENEW (1-866-357-3639) to check status of the surrender request.
+
+---
+
+## Part B — Senior Drivers: Age 79 or Older (In-Person Renewal Requirement)
+When you are 79 years or older in Texas, you are required to renew your driver license in person at a local driver license office.
+
+Renewal period depends on age:
+- Ages 79 to 84: an 8-year license will be issued.
+- Ages 85 and over: a 2-year license will be issued.
+
+### Driver License Office Visit (high-level steps)
+1) Schedule an appointment at a local driver license office.
+2) Complete the driver license application (available online or at the office).
+3) A specialist reviews the application and medical history to determine whether additional testing is required.
+4) Provide documentation:
+   - Completed application
+   - Proof of U.S. citizenship (if not already on record) OR lawful presence (if not a U.S. citizen)
+   - Proof of identity
+5) Provide biometric information (signature and thumbprints).
+6) Have picture taken.
+7) Pay the application fee.
+8) Pass the vision exam.
+
+---
+
+## Driver Safety: Shared Responsibility (Testing Policy)
+- DPS states there are no mandatory driving tests based solely on age.
+- However, if there is concern about driving ability, DPS may request a skills evaluation or additional medical information from a doctor.
+- DPS points to the “Texas Medical Evaluation Process for Driver Licensing” page for details.
+
+---
+
+## Resources linked on the page
+- Transportation Code 521.274
+- Transportation Code 521.2711
+- National Safety Council (NSC)
+- AARP
+- Texas Department of State Health Services (DSHS)
+
+Operational links referenced:
+- Driver License Services – Appointments (schedule an appointment)
+- Driver license application (online PDF)
+- U.S. Citizenship / Lawful Presence requirement page
+- Identification requirements page
+- Driver license fees page
+- Texas Medical Evaluation Process for Driver Licensing page

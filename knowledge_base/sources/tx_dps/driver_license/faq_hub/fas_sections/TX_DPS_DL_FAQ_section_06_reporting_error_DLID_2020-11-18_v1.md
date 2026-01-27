@@ -1,0 +1,51 @@
+# Texas DPS — FAQ Section 6: Reporting An Error On A DL/ID
+
+Source: https://www.dps.texas.gov/section/driver-license/faq/section-6-reporting-error-dlid  
+Publisher: Texas Department of Public Safety (DPS)  
+Page date: 2020-11-18  
+Retrieved at: 2026-01-22  
+
+---
+
+## Q1. I paid for a renewal, but when I received my new license the expiration date did not change. How can I get this corrected?
+Email DriverLicenseErrors@dps.texas.gov for assistance. Include a brief explanation of the error and your contact information. DPS states they will respond within 2 to 3 business days. :contentReference[oaicite:0]{index=0}
+
+---
+
+## Q2. There is a drug or DWI conviction on my record that isn't supposed to be there, how do I get that resolved?
+Contact the court that reported the conviction so they can issue a correction. You may need to provide evidence/documentation to the court proving you are not the individual in question. After DPS receives the correction, allow 14 to 21 business days for your driver record to be updated. :contentReference[oaicite:1]{index=1}
+
+---
+
+## Q3. There is an error (height, gender, date of birth, eye color, spelling of name/address etc.) on my driver license/ID card. How can I get this information corrected?
+Email DriverLicenseErrors@dps.texas.gov for assistance. Include a brief explanation of the error and your contact information. DPS states they will respond within 2 to 3 business days. :contentReference[oaicite:2]{index=2}
+
+---
+
+## Q4. My license says that I am an organ donor even though that is not what I selected on my driver license application. How can I get this information corrected?
+Email DriverLicenseErrors@dps.texas.gov for assistance. Include a brief explanation of the error and your contact information. DPS states they will respond within 2 to 3 business days. :contentReference[oaicite:3]{index=3}
+
+---
+
+## Q5. How do I get a new photo on my driver license/ID card?
+To get a new photo, you must visit a driver license office and order a duplicate for $11. :contentReference[oaicite:4]{index=4}
+
+---
+
+## Q6. I just received my card in the mail and it has my name but someone else's photo on it. How can I get this corrected?
+DPS instructs customers to email their License and Record Service for assistance and include a brief explanation and contact information; DPS states they will respond within 2 to 3 business days. :contentReference[oaicite:5]{index=5}
+
+---
+
+## Q7. I am no longer required to register in the Texas Sex Offender Registration Program. How can I get this information updated with my driver license?
+Registrations are handled through your local law enforcement authority (the city you reside in, or the county authority if you do not reside in a city). DPS directs customers to the Texas Sex Offender Registration Program webpage for details and FAQs. :contentReference[oaicite:6]{index=6}
+
+---
+
+## Q8. I received my Limited Term License in the mail and I do not think the expiration date is correct. What do I need to do?
+DPS states the expiration date matches the lawful presence date confirmation received from the U.S. Department of Homeland Security. If you believe the dates are incorrect or you have additional paperwork, visit a local driver license office for assistance. :contentReference[oaicite:7]{index=7}
+
+---
+
+## Q9. I still cannot find the answer to my question, what do I do?
+If the answer is not listed within the FAQs, DPS directs customers to contact the Customer Service Center for assistance. :contentReference[oaicite:8]{index=8}

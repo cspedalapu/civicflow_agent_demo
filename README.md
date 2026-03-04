@@ -1,4 +1,4 @@
-# AI Customer Agent
+# civicflow_agent_demo
 
 Industry-style, grounded customer support agent for Driver License and State ID workflows.
 
@@ -167,7 +167,7 @@ python -c "import torch; print(torch.cuda.is_available())"
 Set in `.env`:
 ```dotenv
 LANGCHAIN_TRACING_V2=true
-LANGCHAIN_PROJECT=ai-customer-agent
+LANGCHAIN_PROJECT=civicflow_agent_demo
 LANGSMITH_API_KEY=your_key_here
 ```
 
@@ -179,3 +179,19 @@ LANGSMITH_API_KEY=your_key_here
 ## Operational Notes
 - Re-run `scripts/ingest_kb.py` after KB content updates.
 - Appointment records are stored in `data/appointments.json` (runtime file).
+
+## Demo
+1. Start API:
+```bash
+python scripts/run_api.py
+```
+2. Start dashboard (new terminal):
+```bash
+python scripts/run_dashboard.py
+```
+3. Demo flow:
+- Open dashboard and ask a DL question.
+- Ask to book an appointment.
+- Select a slot and confirm booking.
+- Query booking status using phone number.
+- Cancel the booking using booking ID.

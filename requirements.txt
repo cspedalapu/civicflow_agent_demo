@@ -3,6 +3,7 @@ uvicorn[standard]>=0.27
 streamlit>=1.32
 chromadb>=0.5
 python-dotenv>=1.0
+python-multipart>=0.0.9
 
 # Optional (choose one embedding provider)
 sentence-transformers>=2.6
@@ -10,3 +11,8 @@ torch>=2.1
 
 # Optional (LLM)
 openai>=1.30
+
+# Agentic orchestration / tracing
+langgraph>=0.2
+langchain-core>=0.3
+langsmith>=0.1

@@ -59,6 +59,7 @@ class Settings:
 
     github_token: str = _env("GITHUB_TOKEN", "")
     github_api_version: str = _env("GITHUB_API_VERSION", "2022-11-28")
+    github_models_endpoint: str = _env("GITHUB_MODELS_ENDPOINT", "https://models.github.ai/inference")
 
     retrieve_top_n: int = _env_int("RETRIEVE_TOP_N", 10)
 
@@ -66,7 +67,13 @@ class Settings:
     rerank_keep_k: int = _env_int("RERANK_KEEP_K", 3)
     rerank_model: str = _env("RERANK_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
     rerank_max_doc_chars: int = _env_int("RERANK_MAX_DOC_CHARS", 900)
+    rerank_device: str = _env("RERANK_DEVICE", "cuda")
 
+    # Agentic orchestration
+    use_langgraph: bool = _env_bool("USE_LANGGRAPH", True)
+
+    # Appointment store
+    appointments_path: str = _env("APPOINTMENTS_PATH", "data/appointments.json")
 
     # Server
 

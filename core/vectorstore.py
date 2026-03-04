@@ -8,6 +8,12 @@ from chromadb.utils import embedding_functions
 
 from .config import Settings
 
+def _safe_collection_name(name: str) -> str:
+    n = (name or "").strip()
+    if len(n) < 3:
+        n = f"{n}_main" if n else "kb_main"
+    return n
+
 def _build_embedding_fn(settings: Settings):
     provider = settings.embedding_provider.lower().strip()
     if provider == "openai":
@@ -52,8 +58,9 @@ class ChromaKB:
         self.settings = settings
         self.client = chromadb.PersistentClient(path=settings.chroma_path)
         self.embed_fn = _build_embedding_fn(settings)
+        cname = _safe_collection_name(settings.collection_name)
         self.collection = self.client.get_or_create_collection(
-            name=settings.collection_name,
+            name=cname,
             embedding_function=self.embed_fn,
             metadata={"hnsw:space": "cosine"},
         )

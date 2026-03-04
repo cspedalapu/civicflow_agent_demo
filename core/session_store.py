@@ -4,7 +4,7 @@ from typing import Dict, Optional
 import time
 import threading
 
-_LOCK = threading.Lock()
+_LOCK = threading.RLock()
 
 @dataclass
 class SessionState:
@@ -27,7 +27,10 @@ def get_session(session_id: str) -> SessionState:
 
 def update_session(session_id: str, **kwargs) -> SessionState:
     with _LOCK:
-        s = get_session(session_id)
+        s = _SESSIONS.get(session_id)
+        if not s:
+            s = SessionState(session_id=session_id)
+            _SESSIONS[session_id] = s
         for k, v in kwargs.items():
             setattr(s, k, v)
         s.last_ts = time.time()

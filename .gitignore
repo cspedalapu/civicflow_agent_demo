@@ -7,11 +7,12 @@ __pycache__/
 venv/
 env/
 .env
-.env.example
-data/*.jsonl
+data/*
+!data/.gitkeep
 knowledge_base/extracted/*
 knowledge_base/index/*
 knowledge_base/vector_store_chroma/*
 !knowledge_base/extracted/.gitkeep
 !knowledge_base/index/.gitkeep
 !knowledge_base/vector_store_chroma/.gitkeep
+*.sqlite3

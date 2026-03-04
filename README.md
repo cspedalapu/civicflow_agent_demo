@@ -1,75 +1,92 @@
-# AI Customer Agent (Grounded to Knowledge Base)
+# AI Customer Agent (Grounded + Agentic)
 
-This repo is a **from-scratch** template for a realistic customer agent that:
-- Retrieves answers only from `knowledge_base/`
-- Refuses if the KB doesn't support the answer ("I don’t have that information in my knowledge base.")
-- Optionally uses an LLM for natural responses (OpenAI).
+Production-style customer agent for Texas DPS Driver License workflows:
+- Grounded QA strictly from local `knowledge_base/`
+- Appointment booking/cancellation/status flows
+- Multi-turn chat with session memory
+- Phone-call webhook path (Twilio-compatible)
+- LangGraph orchestration, optional LangSmith tracing
 
-Included starter KB files (Texas DPS) are already placed under `knowledge_base/sources/`.
+Chunking + embedding + Chroma retrieval pipeline is preserved and reused.
 
-## Repo layout
-```
+## Features
+- `RAG` pipeline:
+  - Extract -> chunk -> index -> embed -> retrieve
+  - Refusal when evidence is weak
+- `Agentic` orchestration:
+  - Intent routing (`kb_query`, `book_appointment`, `cancel_appointment`, `list_appointments`)
+  - Tool-backed appointment operations
+- `Channels`:
+  - REST chat API
+  - Streamlit dashboard
+  - Voice webhook endpoint
+
+## Repo Layout
+```text
 apps/
-  api/            # FastAPI: /chat, /ingest
-  dashboard/      # Streamlit UI
-core/             # extraction, chunking, chroma, retrieval, guardrails, agent
+  api/main.py
+  dashboard/app.py
+core/
+  agent.py              # grounded QA + guardrails
+  agent_graph.py        # LangGraph orchestration
+  appointments.py       # booking tool store
+  pipeline.py           # extract/chunk/embed ingest
+  retriever.py
+  vectorstore.py
 knowledge_base/
-  sources/        # put your KB files here
-  extracted/      # auto-generated
-  index/          # auto-generated
-  vector_store_chroma/ # auto-generated
-prompts/          # grounding prompts
-scripts/          # run helpers
+  sources/              # authoritative KB files
+  extracted/            # generated
+  index/                # generated
+  vector_store_chroma/  # generated
+data/
+  appointments.json     # generated
 ```
 
-## Quickstart (Windows / Mac / Linux)
-1) Create venv and install deps:
+## Quickstart
+1. Create venv and install:
 ```bash
 python -m venv .venv
-# Windows
 .venv\Scripts\activate
-# Mac/Linux
-# source .venv/bin/activate
-
 pip install -r requirements.txt
 ```
 
-2) Configure env:
+2. Configure:
 ```bash
-cp .env.example .env
-# Add OPENAI_API_KEY if you want natural agent responses
+copy .env.example .env
 ```
 
-3) Build the KB index:
+3. Build KB index:
 ```bash
 python scripts/ingest_kb.py
 ```
 
-4) Run API:
+4. Run API:
 ```bash
 python scripts/run_api.py
 ```
 
-5) Run dashboard:
+5. Run Dashboard:
 ```bash
 streamlit run apps/dashboard/app.py
 ```
 
-## API usage
-- POST `/ingest` → rebuild index
-- POST `/chat` with `{ "message": "..." }`
+## Key API Endpoints
+- `POST /chat`
+- `POST /ingest`
+- `POST /retrieve`
+- `GET /appointments/slots`
+- `POST /appointments/book`
+- `POST /appointments/cancel/{booking_id}`
+- `POST /voice/twilio`
 
-## Guardrail tuning
-- `MIN_SIMILARITY` controls when the agent refuses.
-  - If the agent refuses too often, lower it (e.g., 0.28).
-  - If the agent hallucinates or answers off-topic, increase it (e.g., 0.45).
+## CUDA Notes
+- Set `RERANK_DEVICE=cuda` in `.env`.
+- Ensure CUDA-enabled PyTorch is installed.
+- Reranker is loaded as `CrossEncoder(..., device="cuda")`.
 
-## Next improvements (recommended)
-- Add a reranker for higher precision (bge-reranker / cross-encoder)
-- Add structured tools for forms, locations, and service-specific flows
-- Add conversation memory + call notes persistence
-- Add voice gateway (Twilio) once chat quality is solid
-
-
-$env:PYTHONPATH="."
-python scripts/ingest_kb.py
+## LangSmith Notes
+- Set:
+  - `LANGCHAIN_TRACING_V2=true`
+  - `LANGSMITH_API_KEY=...`
+  - `LANGCHAIN_PROJECT=ai-customer-agent`
+- LangGraph execution traces will appear in LangSmith.

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Literal, TypedDict
+from typing import Any, Dict, Literal, Optional, TypedDict
 import re
 
 from langgraph.graph import END, START, StateGraph
@@ -72,13 +72,32 @@ def _build_graph(runner: AgentGraphRunner):
 
 
 def _route_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
-    msg = (state.get("message") or "").lower()
+    session_id = state["session_id"]
+    session = get_session(session_id)
+    msg = (state.get("message") or "").strip().lower()
+
+    if _wants_to_reset_flow(msg):
+        update_session(
+            session_id,
+            pending_intent=None,
+            pending_booking_phone=None,
+            pending_booking_service_type=None,
+        )
+        return {"intent": "kb_query"}
+
     if any(k in msg for k in ("cancel appointment", "cancel booking", "cancel my", "rescind")):
+        update_session(session_id, pending_intent="cancel_appointment")
         return {"intent": "cancel_appointment"}
     if any(k in msg for k in ("my booking", "my appointment", "list appointment", "status appointment", "check booking")):
+        update_session(session_id, pending_intent="list_appointments")
         return {"intent": "list_appointments"}
     if any(k in msg for k in ("book", "appointment", "schedule", "slot")):
+        update_session(session_id, pending_intent="book_appointment")
         return {"intent": "book_appointment"}
+
+    if session.pending_intent in {"book_appointment", "cancel_appointment", "list_appointments"}:
+        return {"intent": session.pending_intent}
+
     return {"intent": "kb_query"}
 
 
@@ -94,18 +113,39 @@ def _book_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
 
     name = session.name or extract_name(message)
     if not name:
+        update_session(session_id, pending_intent="book_appointment")
         return {"answer": "To book your appointment, may I have your full name first?", "payload": {"refusal": False}}
     if not session.name:
         update_session(session_id, name=name, stage="active")
 
-    phone = _extract_phone(message)
+    requested_slot = _extract_slot(message)
+    slot_service = _service_from_slot(requested_slot)
+
+    phone = _extract_phone(message) or session.pending_booking_phone or ""
+    service_type = _extract_service_type(message) or slot_service or session.pending_booking_service_type
+
+    update_session(
+        session_id,
+        pending_intent="book_appointment",
+        pending_booking_phone=phone or None,
+        pending_booking_service_type=service_type or None,
+    )
+
     if not phone:
         return {
             "answer": "Please share a contact phone number for the booking (10 digits).",
             "payload": {"refusal": False},
         }
 
-    service_type = _extract_service_type(message)
+    if not service_type:
+        return {
+            "answer": (
+                "What service do you need an appointment for? "
+                "Please choose: `dl_appointment`, `state_id`, or `renewal`."
+            ),
+            "payload": {"refusal": False},
+        }
+
     slots = runner.appointment_store.list_open_slots(service_type=service_type)
     if not slots:
         return {
@@ -113,7 +153,6 @@ def _book_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
             "payload": {"refusal": False},
         }
 
-    requested_slot = _extract_slot(message)
     if not requested_slot:
         options = "\n".join(f"- {s}" for s in slots[:3])
         return {
@@ -136,6 +175,12 @@ def _book_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
             slot=requested_slot,
         )
     )
+    update_session(
+        session_id,
+        pending_intent=None,
+        pending_booking_phone=None,
+        pending_booking_service_type=None,
+    )
     return {
         "answer": (
             f"Your appointment is confirmed.\n"
@@ -148,9 +193,11 @@ def _book_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
 
 
 def _cancel_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
+    session_id = state["session_id"]
     msg = state.get("message", "")
     m = re.search(r"\bAPT-[A-Z0-9]{10}\b", msg.upper())
     if not m:
+        update_session(session_id, pending_intent="cancel_appointment")
         return {
             "answer": "Please provide your booking ID in this format: APT-XXXXXXXXXX",
             "payload": {"refusal": False},
@@ -159,12 +206,15 @@ def _cancel_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
     ok = runner.appointment_store.cancel_booking(booking_id)
     if not ok:
         return {"answer": "I could not find an active booking with that ID.", "payload": {"refusal": False}}
+    update_session(session_id, pending_intent=None)
     return {"answer": f"Your appointment {booking_id} has been cancelled.", "payload": {"refusal": False}}
 
 
 def _list_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
+    session_id = state["session_id"]
     phone = _extract_phone(state.get("message", ""))
     if not phone:
+        update_session(session_id, pending_intent="list_appointments")
         return {
             "answer": "Please share the phone number used for your booking so I can look it up.",
             "payload": {"refusal": False},
@@ -172,6 +222,7 @@ def _list_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
     items = runner.appointment_store.bookings_for_phone(phone)
     if not items:
         return {"answer": "I couldn't find active appointments for that phone number.", "payload": {"refusal": False}}
+    update_session(session_id, pending_intent=None)
     lines = [f"- {b['booking_id']} | {b['service_type']} | {b['slot']}" for b in items]
     return {"answer": "Here are your active appointments:\n" + "\n".join(lines), "payload": {"refusal": False}}
 
@@ -183,15 +234,44 @@ def _extract_phone(text: str) -> str:
     return ""
 
 
-def _extract_service_type(text: str) -> str:
+def _extract_service_type(text: str) -> Optional[str]:
     t = (text or "").lower()
+    if "dl_appointment" in t:
+        return "dl_appointment"
+    if "state_id" in t:
+        return "state_id"
+    if "renewal" in t:
+        return "renewal"
     if "renew" in t:
         return "renewal"
     if "state id" in t or "id card" in t:
         return "state_id"
-    return "dl_appointment"
+    if "driver license" in t or "driver licence" in t or "dl" in t:
+        return "dl_appointment"
+    return None
 
 
 def _extract_slot(text: str) -> str:
     m = re.search(r"(dl_appointment|state_id|renewal)\s*\|\s*\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}", text or "", re.IGNORECASE)
     return m.group(0).lower() if m else ""
+
+
+def _service_from_slot(slot: str) -> Optional[str]:
+    if not slot:
+        return None
+    return slot.split("|", 1)[0].strip().lower()
+
+
+def _wants_to_reset_flow(message: str) -> bool:
+    msg = (message or "").lower()
+    return any(
+        token in msg
+        for token in (
+            "never mind",
+            "nevermind",
+            "start over",
+            "new topic",
+            "forget it",
+            "stop booking",
+        )
+    )

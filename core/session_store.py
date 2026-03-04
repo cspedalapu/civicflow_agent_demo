@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from typing import Dict, Optional
 import time
 import threading
@@ -11,8 +11,11 @@ class SessionState:
     session_id: str
     name: Optional[str] = None
     stage: str = "new"   # new -> awaiting_name -> active
-    created_ts: float = time.time()
-    last_ts: float = time.time()
+    pending_intent: Optional[str] = None
+    pending_booking_phone: Optional[str] = None
+    pending_booking_service_type: Optional[str] = None
+    created_ts: float = field(default_factory=time.time)
+    last_ts: float = field(default_factory=time.time)
 
 _SESSIONS: Dict[str, SessionState] = {}
 

@@ -1,8 +1,8 @@
 import requests
 import streamlit as st
 
-st.set_page_config(page_title="CivicFlow Agent Dashboard", layout="wide")
-st.title("CivicFlow Agent")
+st.set_page_config(page_title="civicflow_agent_demo Dashboard", layout="wide")
+st.title("civicflow_agent_demo")
 st.caption("Grounded KB + appointment booking + LangGraph orchestration")
 
 if "session_id" not in st.session_state:

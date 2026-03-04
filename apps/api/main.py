@@ -21,7 +21,7 @@ from core.vectorstore import ChromaKB
 
 load_dotenv()
 
-app = FastAPI(title="CivicFlow Agent API", version="0.2.0")
+app = FastAPI(title="civicflow_agent_demo API", version="0.2.0")
 settings = get_settings()
 kb = ChromaKB(settings)
 appointment_store = AppointmentStore(settings)

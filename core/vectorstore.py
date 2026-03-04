@@ -58,9 +58,30 @@ class ChromaKB:
         self.settings = settings
         self.client = chromadb.PersistentClient(path=settings.chroma_path)
         self.embed_fn = _build_embedding_fn(settings)
-        cname = _safe_collection_name(settings.collection_name)
+        self.collection_name = _safe_collection_name(settings.collection_name)
         self.collection = self.client.get_or_create_collection(
-            name=cname,
+            name=self.collection_name,
+            embedding_function=self.embed_fn,
+            metadata={"hnsw:space": "cosine"},
+        )
+
+    def reset_collection(self) -> None:
+        try:
+            existing = self.collection.get(include=[])
+            ids = existing.get("ids") or []
+            if ids:
+                self.collection.delete(ids=ids)
+            return
+        except Exception:
+            # Fallback if collection.get/delete fails on a backend version.
+            pass
+
+        try:
+            self.client.delete_collection(name=self.collection_name)
+        except Exception:
+            pass
+        self.collection = self.client.get_or_create_collection(
+            name=self.collection_name,
             embedding_function=self.embed_fn,
             metadata={"hnsw:space": "cosine"},
         )

@@ -1,8 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import Dict, Any, List
-import json
-import time
 
 from .config import Settings
 from .extractor import extract_all
@@ -16,16 +14,16 @@ def ingest(settings: Settings) -> Dict[str, Any]:
     extracted_dir = kb_path / "extracted"
     index_dir = kb_path / "index"
     index_dir.mkdir(parents=True, exist_ok=True)
+    chunks_index_path = index_dir / "chunks.jsonl"
+    if chunks_index_path.exists():
+        chunks_index_path.unlink()
 
     # 1) Extract
     extracted_count = extract_all(sources_dir=sources_dir, extracted_dir=extracted_dir)
 
-    # 2) Chunk + persist index + upsert to Chroma
+    # 2) Chunk + persist index + upsert to Chroma (fresh rebuild)
     kb = ChromaKB(settings)
-    chunks_index_path = index_dir / "chunks.jsonl"
-    # overwrite for idempotency (simple strategy)
-    if chunks_index_path.exists():
-        chunks_index_path.unlink()
+    kb.reset_collection()
 
     upsert_ids: List[str] = []
     upsert_docs: List[str] = []
@@ -38,14 +36,13 @@ def ingest(settings: Settings) -> Dict[str, Any]:
         text = data.get("text") or ""
         meta = data.get("metadata") or {}
         chunks = make_chunks(
-    doc_id=doc_id,
-    title=title,
-    text=text,
-    metadata=meta,
-    chunk_size=settings.chunk_size,
-    overlap=settings.chunk_overlap,
-)
-
+            doc_id=doc_id,
+            title=title,
+            text=text,
+            metadata=meta,
+            chunk_size=settings.chunk_size,
+            overlap=settings.chunk_overlap,
+        )
 
         for c in chunks:
             append_jsonl(chunks_index_path, {

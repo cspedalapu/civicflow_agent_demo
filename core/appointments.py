@@ -1,16 +1,21 @@
+"""
+core/appointments.py
+────────────────────
+Appointment booking engine backed by SQLAlchemy / SQLite.
+
+The public interface (`AppointmentRequest`, `AppointmentStore`) is
+unchanged so agent_graph.py and main.py keep working.
+"""
+
 from __future__ import annotations
 
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any, Dict, List, Optional
-import json
-import threading
-import uuid
 
 from .config import Settings
-
-_LOCK = threading.RLock()
+from .database import AppointmentSlot, Booking, get_db, _utcnow
 
 
 @dataclass(frozen=True)
@@ -24,95 +29,107 @@ class AppointmentRequest:
 
 class AppointmentStore:
     def __init__(self, settings: Settings):
-        self.path = Path(settings.appointments_path)
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        if not self.path.exists():
-            self._write(
-                {
-                    "slots": _default_slots(),
-                    "bookings": [],
-                }
-            )
+        # DB tables are created by init_db(); nothing file-based anymore.
+        pass
 
-    def _read(self) -> Dict[str, Any]:
-        with _LOCK:
-            if not self.path.exists():
-                return {"slots": _default_slots(), "bookings": []}
-            return json.loads(self.path.read_text(encoding="utf-8"))
+    # ── queries ──────────────────────────────────────────────────────
 
-    def _write(self, obj: Dict[str, Any]) -> None:
-        with _LOCK:
-            self.path.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
+    def list_open_slots(
+        self, service_type: Optional[str] = None, limit: int = 10
+    ) -> List[str]:
+        with get_db() as db:
+            q = db.query(AppointmentSlot).filter(AppointmentSlot.is_active == True)  # noqa: E712
+            if service_type:
+                q = q.filter(AppointmentSlot.service_type == service_type.lower().strip())
 
-    def list_open_slots(self, service_type: Optional[str] = None, limit: int = 10) -> List[str]:
-        data = self._read()
-        slots = data.get("slots", [])
-        bookings = data.get("bookings", [])
-        booked = {b["slot"] for b in bookings if b.get("status") == "booked"}
-        open_slots = [s for s in slots if s not in booked]
-        if service_type:
-            token = service_type.lower().strip()
-            open_slots = [s for s in open_slots if token in s.lower()]
-        return open_slots[:limit]
+            all_slots = q.all()
+            booked_labels = {
+                b.slot_label
+                for b in db.query(Booking).filter(Booking.status == "booked").all()
+            }
+            open_labels = [s.slot_label for s in all_slots if s.slot_label not in booked_labels]
+            return open_labels[:limit]
+
+    # ── mutations ────────────────────────────────────────────────────
 
     def create_booking(self, req: AppointmentRequest) -> Dict[str, Any]:
-        data = self._read()
-        slots = data.get("slots", [])
-        bookings = data.get("bookings", [])
-        if req.slot not in slots:
-            raise ValueError("Requested slot is not available in schedule.")
-        if any(b.get("slot") == req.slot and b.get("status") == "booked" for b in bookings):
-            raise ValueError("Requested slot is already booked.")
+        with get_db() as db:
+            slot = (
+                db.query(AppointmentSlot)
+                .filter(AppointmentSlot.slot_label == req.slot, AppointmentSlot.is_active == True)  # noqa: E712
+                .first()
+            )
+            if not slot:
+                raise ValueError("Requested slot is not available in schedule.")
 
-        booking = {
-            "booking_id": f"APT-{uuid.uuid4().hex[:10].upper()}",
-            "service_type": req.service_type,
-            "customer_name": req.customer_name,
-            "customer_phone": req.customer_phone,
-            "slot": req.slot,
-            "notes": req.notes,
-            "status": "booked",
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        }
-        bookings.append(booking)
-        data["bookings"] = bookings
-        self._write(data)
-        return booking
+            exists = (
+                db.query(Booking)
+                .filter(Booking.slot_label == req.slot, Booking.status == "booked")
+                .first()
+            )
+            if exists:
+                raise ValueError("Requested slot is already booked.")
+
+            booking = Booking(
+                booking_id=f"APT-{uuid.uuid4().hex[:10].upper()}",
+                service_type=req.service_type,
+                customer_name=req.customer_name,
+                customer_phone=req.customer_phone,
+                slot_label=req.slot,
+                notes=req.notes or "",
+                status="booked",
+            )
+            db.add(booking)
+            db.commit()
+            db.refresh(booking)
+
+            return {
+                "booking_id": booking.booking_id,
+                "service_type": booking.service_type,
+                "customer_name": booking.customer_name,
+                "customer_phone": booking.customer_phone,
+                "slot": booking.slot_label,
+                "notes": booking.notes,
+                "status": booking.status,
+                "created_at": booking.created_at.isoformat() if booking.created_at else None,
+            }
 
     def cancel_booking(self, booking_id: str) -> bool:
-        data = self._read()
-        found = False
-        for b in data.get("bookings", []):
-            if b.get("booking_id", "").lower() == booking_id.lower() and b.get("status") == "booked":
-                b["status"] = "cancelled"
-                b["cancelled_at"] = datetime.now(timezone.utc).isoformat()
-                found = True
-                break
-        if found:
-            self._write(data)
-        return found
+        with get_db() as db:
+            b = (
+                db.query(Booking)
+                .filter(
+                    Booking.booking_id == booking_id.upper(),
+                    Booking.status == "booked",
+                )
+                .first()
+            )
+            if not b:
+                return False
+            b.status = "cancelled"
+            b.cancelled_at = _utcnow()
+            db.commit()
+            return True
 
     def bookings_for_phone(self, phone: str) -> List[Dict[str, Any]]:
         p = _normalize_phone(phone)
-        data = self._read()
-        return [
-            b
-            for b in data.get("bookings", [])
-            if _normalize_phone(b.get("customer_phone", "")) == p and b.get("status") == "booked"
-        ]
+        with get_db() as db:
+            rows = (
+                db.query(Booking)
+                .filter(Booking.status == "booked")
+                .all()
+            )
+            return [
+                {
+                    "booking_id": b.booking_id,
+                    "service_type": b.service_type,
+                    "slot": b.slot_label,
+                    "customer_name": b.customer_name,
+                }
+                for b in rows
+                if _normalize_phone(b.customer_phone) == p
+            ]
 
 
 def _normalize_phone(phone: str) -> str:
     return "".join(ch for ch in (phone or "") if ch.isdigit())
-
-
-def _default_slots() -> List[str]:
-    return [
-        "dl_appointment | 2026-03-05 09:00",
-        "dl_appointment | 2026-03-05 10:00",
-        "dl_appointment | 2026-03-05 11:00",
-        "state_id | 2026-03-05 13:30",
-        "state_id | 2026-03-05 14:30",
-        "renewal | 2026-03-06 09:30",
-        "renewal | 2026-03-06 10:30",
-    ]

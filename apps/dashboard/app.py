@@ -365,6 +365,25 @@ def _render_sidebar() -> None:
             st.rerun()
 
         st.divider()
+        st.markdown("### � Analytics")
+        if st.button("Refresh Stats", use_container_width=True):
+            try:
+                r = requests.get(f"{st.session_state['api_url']}/stats", timeout=10)
+                r.raise_for_status()
+                data = r.json()
+                st.session_state["_stats"] = data
+            except Exception as exc:
+                st.error(f"Stats error: {exc}")
+        stats = st.session_state.get("_stats")
+        if stats:
+            c1, c2 = st.columns(2)
+            c1.metric("Sessions", stats.get("total_sessions", 0))
+            c2.metric("Messages", stats.get("total_messages", 0))
+            c3, c4 = st.columns(2)
+            c3.metric("Bookings", stats.get("active_bookings", 0))
+            c4.metric("Cancelled", stats.get("cancelled_bookings", 0))
+
+        st.divider()
         st.markdown("### 📅 Appointments")
         svc = st.selectbox("Service", ["", "dl_appointment", "state_id", "renewal"], label_visibility="collapsed")
         if st.button("View Open Slots", use_container_width=True):
@@ -395,6 +414,7 @@ def _render_sidebar() -> None:
         st.divider()
         st.markdown(
             '<div class="dps-footer">'
+            "Powered by SQLite · SQLAlchemy<br>"
             "© 2026 Texas DPS – CivicFlow Demo"
             "</div>",
             unsafe_allow_html=True,

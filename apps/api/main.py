@@ -13,7 +13,8 @@ from core.agent import answer_question
 from core.agent_graph import AgentGraphRunner
 from core.appointments import AppointmentRequest, AppointmentStore
 from core.config import get_settings
-from core.logger import ensure_session_id, log_chat_event
+from core.database import init_db, seed_default_slots, get_db, ChatMessage, SessionModel, Booking
+from core.logger import ensure_session_id, log_chat_event, get_chat_history
 from core.name_parser import extract_name
 from core.pipeline import ingest
 from core.session_store import get_session, update_session
@@ -21,7 +22,11 @@ from core.vectorstore import ChromaKB
 
 load_dotenv()
 
-app = FastAPI(title="civicflow_agent_demo API", version="0.2.0")
+# ── Initialise database ─────────────────────────────────────────────────
+init_db()
+seed_default_slots()
+
+app = FastAPI(title="civicflow_agent_demo API", version="0.3.0")
 settings = get_settings()
 kb = ChromaKB(settings)
 appointment_store = AppointmentStore(settings)
@@ -192,19 +197,24 @@ def retrieve_debug(req: ChatRequest) -> Dict[str, Any]:
 
 @app.get("/history/{session_id}")
 def history(session_id: str, limit: int = 50) -> Dict[str, Any]:
-    path = Path("data/conversations.jsonl")
-    if not path.exists():
-        return {"events": []}
-    events = []
-    with path.open("r", encoding="utf-8") as f:
-        for line in f:
-            try:
-                obj = json.loads(line)
-            except Exception:
-                continue
-            if obj.get("session_id") == session_id:
-                events.append(obj)
-    return {"events": events[-limit:]}
+    events = get_chat_history(session_id, limit=limit)
+    return {"events": events}
+
+
+@app.get("/stats")
+def stats() -> Dict[str, Any]:
+    """Dashboard analytics: counts of sessions, messages, bookings."""
+    with get_db() as db:
+        total_sessions = db.query(SessionModel).count()
+        total_messages = db.query(ChatMessage).count()
+        total_bookings = db.query(Booking).filter(Booking.status == "booked").count()
+        total_cancelled = db.query(Booking).filter(Booking.status == "cancelled").count()
+    return {
+        "total_sessions": total_sessions,
+        "total_messages": total_messages,
+        "active_bookings": total_bookings,
+        "cancelled_bookings": total_cancelled,
+    }
 
 
 @app.post("/voice/twilio")

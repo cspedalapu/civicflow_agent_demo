@@ -5,6 +5,9 @@ chromadb>=0.5
 python-dotenv>=1.0
 python-multipart>=0.0.9
 
+# Database
+sqlalchemy>=2.0
+
 # Optional (choose one embedding provider)
 sentence-transformers>=2.6
 torch>=2.1

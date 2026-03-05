@@ -4,7 +4,10 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+# ── Load .env BEFORE any core imports so env vars are available ──────────
 from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, Form
 from fastapi.responses import Response
 from pydantic import BaseModel
@@ -19,8 +22,6 @@ from core.name_parser import extract_name
 from core.pipeline import ingest
 from core.session_store import get_session, update_session
 from core.vectorstore import ChromaKB
-
-load_dotenv()
 
 # ── Initialise database ─────────────────────────────────────────────────
 init_db()
@@ -79,44 +80,68 @@ def _is_explicit_name_message(text: str) -> bool:
     )
 
 
+def _looks_like_support_question(text: str) -> bool:
+    t = (text or "").strip().lower()
+    if len(t) < 8:
+        return False
+    if "?" in t:
+        return True
+    keywords = (
+        "how ",
+        "what ",
+        "where ",
+        "when ",
+        "can i",
+        "do i",
+        "need ",
+        "driver",
+        "license",
+        "renew",
+        "state id",
+        "id card",
+        "appointment",
+        "book",
+        "schedule",
+        "cdl",
+        "requirements",
+    )
+    return any(k in t for k in keywords)
+
+
 @app.post("/chat")
 def chat(req: ChatRequest) -> Dict[str, Any]:
     session_id = ensure_session_id(req.session_id)
     msg = (req.message or "").strip()
     session = get_session(session_id)
 
-    if session.stage == "new":
-        update_session(session_id, stage="awaiting_name")
-        out = {
-            "answer": _greet_ask_name(),
-            "refusal": False,
-            "session_id": session_id,
-            "stage": "awaiting_name",
-        }
-        log_chat_event({"session_id": session_id, "stage": "awaiting_name", "question": msg, "answer": out["answer"]})
-        return out
-
-    if session.stage == "awaiting_name" and not session.name:
+    if session.stage in {"new", "awaiting_name"} and not session.name:
         name = extract_name(msg)
-        if not name:
+        if name:
+            update_session(session_id, name=name, stage="active")
             out = {
-                "answer": "I didn't catch your name. What should I call you?",
+                "answer": f"Thanks, {name}. How can I help you today?",
+                "refusal": False,
+                "session_id": session_id,
+                "stage": "active",
+                "name": name,
+            }
+            log_chat_event({"session_id": session_id, "stage": "active", "name": name, "question": msg, "answer": out["answer"]})
+            return out
+
+        # Keep the DPS-style name prompt for short/opening messages, but do not block
+        # users who directly ask a DL/ID question from getting a grounded answer.
+        if not _looks_like_support_question(msg):
+            update_session(session_id, stage="awaiting_name")
+            out = {
+                "answer": _greet_ask_name() if session.stage == "new" else "I didn't catch your name. What should I call you?",
                 "refusal": False,
                 "session_id": session_id,
                 "stage": "awaiting_name",
             }
             log_chat_event({"session_id": session_id, "stage": "awaiting_name", "question": msg, "answer": out["answer"]})
             return out
-        update_session(session_id, name=name, stage="active")
-        out = {
-            "answer": f"Thanks, {name}. How can I help you today?",
-            "refusal": False,
-            "session_id": session_id,
-            "stage": "active",
-            "name": name,
-        }
-        log_chat_event({"session_id": session_id, "stage": "active", "name": name, "question": msg, "answer": out["answer"]})
-        return out
+
+        update_session(session_id, stage="active")
 
     maybe_name = extract_name(msg)
     if maybe_name and _is_explicit_name_message(msg):

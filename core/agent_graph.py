@@ -532,13 +532,18 @@ def _is_booking_side_question(message: str) -> bool:
         return False
     if _parse_slot_index_choice(msg) is not None:
         return False
-    if _extract_service_type(msg) is not None:
+    if re.fullmatch(
+        r"\s*(dl_appointment|state_id|renewal|renew|state id|id card|driver license|driver licence|dl)\s*",
+        msg,
+    ):
         return False
 
-    # Side info questions that should hit KB/RAG.
+    # Side info questions that should hit KB/RAG without discarding booking context.
     kb_tokens = (
         "document",
         "documents",
+        "paperwork",
+        "bring",
         "requirement",
         "requirements",
         "proof",
@@ -550,4 +555,18 @@ def _is_booking_side_question(message: str) -> bool:
         "online",
         "process",
     )
-    return any(t in msg for t in kb_tokens)
+    if any(t in msg for t in kb_tokens):
+        return True
+
+    question_markers = (
+        "before that",
+        "want to know",
+        "need to know",
+        "tell me",
+        "not for appointment",
+        "not for the appointment",
+    )
+    if any(marker in msg for marker in question_markers):
+        return True
+
+    return False

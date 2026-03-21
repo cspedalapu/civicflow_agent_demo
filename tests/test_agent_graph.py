@@ -156,6 +156,20 @@ def test_booking_allows_side_kb_question(tmp_path: Path):
     assert out["intent"] == "kb_query"
 
 
+def test_booking_allows_side_kb_question_with_service_wording(tmp_path: Path):
+    runner = _runner(tmp_path)
+    session_id = f"s9-{uuid.uuid4().hex[:8]}"
+
+    runner.run(session_id=session_id, message="My name is Chandra and I want to book a renewal appointment")
+    runner.run(session_id=session_id, message="chandra@example.com")
+
+    out = runner.run(
+        session_id=session_id,
+        message="Before that I want to know what documents I need for the renewal.",
+    )
+    assert out["intent"] == "kb_query"
+
+
 def test_smalltalk_thanks_does_not_trigger_kb_clarification(tmp_path: Path):
     runner = _runner(tmp_path)
     out = runner.run(session_id=f"s6-{uuid.uuid4().hex[:8]}", message="thank you")

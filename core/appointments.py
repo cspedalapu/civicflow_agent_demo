@@ -15,7 +15,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from .config import Settings
-from .database import AppointmentSlot, Booking, get_db, init_db, seed_default_slots, _utcnow
+from .database import AppointmentSlot, Booking, get_db, _utcnow
 
 
 @dataclass(frozen=True)
@@ -30,9 +30,7 @@ class AppointmentRequest:
 
 class AppointmentStore:
     def __init__(self, settings: Settings):
-        # Ensure schema and seed data exist in non-API execution paths (tests, scripts).
-        init_db()
-        seed_default_slots()
+        self.settings = settings
 
     # ── queries ──────────────────────────────────────────────────────
 

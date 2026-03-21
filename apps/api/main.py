@@ -16,16 +16,12 @@ from core.agent import answer_question
 from core.agent_graph import AgentGraphRunner
 from core.appointments import AppointmentRequest, AppointmentStore
 from core.config import get_settings
-from core.database import init_db, seed_default_slots, get_db, ChatMessage, SessionModel, Booking
+from core.database import get_db, ChatMessage, SessionModel, Booking
 from core.logger import ensure_session_id, log_chat_event, get_chat_history
 from core.name_parser import extract_name
 from core.pipeline import ingest
 from core.session_store import get_session, update_session
 from core.vectorstore import ChromaKB
-
-# ── Initialise database ─────────────────────────────────────────────────
-init_db()
-seed_default_slots()
 
 app = FastAPI(title="civicflow_agent_demo API", version="0.3.0")
 settings = get_settings()

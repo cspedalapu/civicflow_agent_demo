@@ -147,6 +147,77 @@ class AppointmentStore:
                 for b in rows
             ]
 
+    def latest_booking_for_email(self, email: str) -> Optional[Dict[str, Any]]:
+        e = (email or "").strip().lower()
+        if not e:
+            return None
+        with get_db() as db:
+            row = (
+                db.query(Booking)
+                .filter(Booking.status == "booked", Booking.customer_email == e)
+                .order_by(Booking.created_at.desc(), Booking.id.desc())
+                .first()
+            )
+            if not row:
+                return None
+            return {
+                "booking_id": row.booking_id,
+                "service_type": row.service_type,
+                "customer_name": row.customer_name,
+                "customer_email": row.customer_email or "",
+                "customer_phone": row.customer_phone,
+                "slot": row.slot_label,
+                "notes": row.notes,
+                "status": row.status,
+                "created_at": row.created_at.isoformat() if row.created_at else None,
+            }
+
+    def reschedule_booking(self, booking_id: str, new_slot: str) -> Optional[Dict[str, Any]]:
+        with get_db() as db:
+            booking = (
+                db.query(Booking)
+                .filter(Booking.booking_id == booking_id.upper(), Booking.status == "booked")
+                .first()
+            )
+            if not booking:
+                return None
+
+            slot = (
+                db.query(AppointmentSlot)
+                .filter(AppointmentSlot.slot_label == new_slot, AppointmentSlot.is_active == True)  # noqa: E712
+                .first()
+            )
+            if not slot:
+                raise ValueError("Requested slot is not available in schedule.")
+
+            exists = (
+                db.query(Booking)
+                .filter(
+                    Booking.slot_label == new_slot,
+                    Booking.status == "booked",
+                    Booking.booking_id != booking.booking_id,
+                )
+                .first()
+            )
+            if exists:
+                raise ValueError("Requested slot is already booked.")
+
+            booking.slot_label = new_slot
+            db.commit()
+            db.refresh(booking)
+
+            return {
+                "booking_id": booking.booking_id,
+                "service_type": booking.service_type,
+                "customer_name": booking.customer_name,
+                "customer_email": booking.customer_email or "",
+                "customer_phone": booking.customer_phone,
+                "slot": booking.slot_label,
+                "notes": booking.notes,
+                "status": booking.status,
+                "created_at": booking.created_at.isoformat() if booking.created_at else None,
+            }
+
     def _query_open_slots(self, service_type: Optional[str] = None) -> List[str]:
         with get_db() as db:
             q = db.query(AppointmentSlot).filter(AppointmentSlot.is_active == True)  # noqa: E712

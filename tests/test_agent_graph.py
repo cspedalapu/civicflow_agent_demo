@@ -86,6 +86,44 @@ def test_booking_accepts_datetime_only_slot_selection(tmp_path: Path):
     assert "appointment is confirmed" in out["answer"].lower()
 
 
+def test_booking_accepts_letter_choice(tmp_path: Path):
+    runner = _runner(tmp_path)
+    session_id = f"s4b-{uuid.uuid4().hex[:8]}"
+    open_slot = _ensure_open_slot(runner.appointment_store)
+    service_type = open_slot.split("|", 1)[0].strip()
+
+    runner.run(session_id=session_id, message="My name is Jamie, I need an appointment")
+    runner.run(session_id=session_id, message="jamie@example.com")
+    options = runner.run(session_id=session_id, message=service_type)
+
+    assert "(A)" in options["answer"]
+    out = runner.run(session_id=session_id, message="I will go with option A")
+
+    assert out["intent"] == "book_appointment"
+    assert "appointment is confirmed" in out["answer"].lower()
+
+
+def test_booking_accepts_natural_day_time_reply(tmp_path: Path):
+    runner = _runner(tmp_path)
+    session_id = f"s4c-{uuid.uuid4().hex[:8]}"
+    open_slot = _ensure_open_slot(runner.appointment_store)
+    service_type = open_slot.split("|", 1)[0].strip()
+    slot_dt = open_slot.split("|", 1)[1].strip()
+    date_part, time_part = slot_dt.split(" ")
+    day = str(int(date_part.split("-")[2]))
+
+    runner.run(session_id=session_id, message="My name is Jamie, I need an appointment")
+    runner.run(session_id=session_id, message="jamie@example.com")
+    runner.run(session_id=session_id, message=service_type)
+    out = runner.run(
+        session_id=session_id,
+        message=f"On {day}, {time_part} is best for me.",
+    )
+
+    assert out["intent"] == "book_appointment"
+    assert "appointment is confirmed" in out["answer"].lower()
+
+
 def test_booking_no_slots_resets_service_selection(tmp_path: Path):
     runner = _runner(tmp_path)
     session_id = f"s5-{uuid.uuid4().hex[:8]}"
@@ -115,6 +153,20 @@ def test_booking_allows_side_kb_question(tmp_path: Path):
     runner.run(session_id=session_id, message="renewal")
 
     out = runner.run(session_id=session_id, message="what documents should I carry for appointment")
+    assert out["intent"] == "kb_query"
+
+
+def test_booking_allows_side_kb_question_with_service_wording(tmp_path: Path):
+    runner = _runner(tmp_path)
+    session_id = f"s9-{uuid.uuid4().hex[:8]}"
+
+    runner.run(session_id=session_id, message="My name is Chandra and I want to book a renewal appointment")
+    runner.run(session_id=session_id, message="chandra@example.com")
+
+    out = runner.run(
+        session_id=session_id,
+        message="Before that I want to know what documents I need for the renewal.",
+    )
     assert out["intent"] == "kb_query"
 
 

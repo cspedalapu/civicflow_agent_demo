@@ -120,7 +120,10 @@ def answer_question(settings: Settings, kb, question: str) -> Dict[str, Any]:
 
     if llm.available():
         t3 = perf_counter()
-        answer = llm.generate(question=question, evidence=evidence)
+        try:
+            answer = llm.generate(question=question, evidence=evidence)
+        except Exception:
+            answer = extractive_fallback(question, hits)
         t4 = perf_counter()
         timings_ms["llm_ms"] = round((t4 - t3) * 1000, 1)
     else:

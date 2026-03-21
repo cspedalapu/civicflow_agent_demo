@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Dict, Literal, Optional, TypedDict
 import re
 
@@ -312,20 +313,83 @@ def _extract_datetime(text: str) -> str:
     return m.group(0) if m else ""
 
 
+def _extract_time_parts(text: str) -> tuple[Optional[int], Optional[int]]:
+    raw = text or ""
+
+    m = re.search(r"\b(\d{1,2}):(\d{2})\s*([ap])\.?m?\.?\b", raw, re.IGNORECASE)
+    if m:
+        hour = int(m.group(1))
+        minute = int(m.group(2))
+        meridiem = m.group(3).lower()
+        if 1 <= hour <= 12:
+            if meridiem == "p" and hour != 12:
+                hour += 12
+            elif meridiem == "a" and hour == 12:
+                hour = 0
+            return hour, minute
+
+    m = re.search(r"\b(\d{1,2})\s*([ap])\.?m?\.?\b", raw, re.IGNORECASE)
+    if m:
+        hour = int(m.group(1))
+        meridiem = m.group(2).lower()
+        if 1 <= hour <= 12:
+            if meridiem == "p" and hour != 12:
+                hour += 12
+            elif meridiem == "a" and hour == 12:
+                hour = 0
+            return hour, 0
+
+    m = re.search(r"\b(\d{1,2}):(\d{2})\b", raw)
+    if m:
+        return int(m.group(1)), int(m.group(2))
+
+    return None, None
+
+
+def _extract_day_of_month(text: str) -> Optional[int]:
+    m = re.search(r"\b(?:on\s+)?(\d{1,2})(?:st|nd|rd|th)?\b", text or "", re.IGNORECASE)
+    if not m:
+        return None
+    day = int(m.group(1))
+    return day if 1 <= day <= 31 else None
+
+
+def _slot_to_datetime(slot: str) -> Optional[datetime]:
+    if "|" not in slot:
+        return None
+    try:
+        dt_text = slot.split("|", 1)[1].strip()
+        return datetime.strptime(dt_text, "%Y-%m-%d %H:%M")
+    except ValueError:
+        return None
+
+
 def _parse_slot_index_choice(text: str) -> Optional[int]:
     t = (text or "").strip().lower()
     if not t:
         return None
+
+    letters = {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5}
 
     # Bare numeric choice: "1", "2"
     m = re.fullmatch(r"\s*(\d{1,2})\s*", t)
     if m:
         return int(m.group(1))
 
+    # Bare letter choice: "a", "b"
+    m = re.fullmatch(r"\s*([a-e])\s*", t)
+    if m:
+        return letters[m.group(1)]
+
     # "option 1", "slot 2", "pick 3", etc.
-    m = re.search(r"\b(?:option|slot|pick|choose|select)\s*(\d{1,2})\b", t)
+    m = re.search(r"\b(?:option|slot|pick|choose|select|go with|take)\s*(\d{1,2})\b", t)
     if m:
         return int(m.group(1))
+
+    # "option a", "slot b", "go with c", etc.
+    m = re.search(r"\b(?:option|slot|pick|choose|select|go with|take)\s*([a-e])\b", t)
+    if m:
+        return letters[m.group(1)]
 
     # Common ordinals.
     if "first" in t:
@@ -355,12 +419,43 @@ def _resolve_slot_choice(text: str, slots: list[str]) -> str:
             if dt in slot:
                 return slot
 
+    slot_dts = [(slot, _slot_to_datetime(slot)) for slot in slots]
+
+    day = _extract_day_of_month(text)
+    hour, minute = _extract_time_parts(text)
+    if day is not None or hour is not None:
+        matches: list[str] = []
+        for slot, slot_dt in slot_dts:
+            if slot_dt is None:
+                continue
+            if day is not None and slot_dt.day != day:
+                continue
+            if hour is not None and slot_dt.hour != hour:
+                continue
+            if minute is not None and slot_dt.minute != minute:
+                continue
+            matches.append(slot)
+        if len(matches) == 1:
+            return matches[0]
+
+    if hour is not None:
+        matches = []
+        for slot, slot_dt in slot_dts:
+            if slot_dt is None or slot_dt.hour != hour:
+                continue
+            if minute is not None and slot_dt.minute != minute:
+                continue
+            matches.append(slot)
+        if len(matches) == 1:
+            return matches[0]
+
     return ""
 
 
 def _format_slot_options(slots: list[str], limit: int = 3) -> str:
     chosen = slots[:limit]
-    return "\n".join(f"{i}. {slot}" for i, slot in enumerate(chosen, start=1))
+    letters = "ABCDE"
+    return "\n".join(f"{i}. ({letters[i - 1]}) {slot}" for i, slot in enumerate(chosen, start=1))
 
 
 def _service_from_slot(slot: str) -> Optional[str]:
@@ -437,13 +532,18 @@ def _is_booking_side_question(message: str) -> bool:
         return False
     if _parse_slot_index_choice(msg) is not None:
         return False
-    if _extract_service_type(msg) is not None:
+    if re.fullmatch(
+        r"\s*(dl_appointment|state_id|renewal|renew|state id|id card|driver license|driver licence|dl)\s*",
+        msg,
+    ):
         return False
 
-    # Side info questions that should hit KB/RAG.
+    # Side info questions that should hit KB/RAG without discarding booking context.
     kb_tokens = (
         "document",
         "documents",
+        "paperwork",
+        "bring",
         "requirement",
         "requirements",
         "proof",
@@ -455,4 +555,18 @@ def _is_booking_side_question(message: str) -> bool:
         "online",
         "process",
     )
-    return any(t in msg for t in kb_tokens)
+    if any(t in msg for t in kb_tokens):
+        return True
+
+    question_markers = (
+        "before that",
+        "want to know",
+        "need to know",
+        "tell me",
+        "not for appointment",
+        "not for the appointment",
+    )
+    if any(marker in msg for marker in question_markers):
+        return True
+
+    return False

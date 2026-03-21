@@ -103,6 +103,9 @@ def _route_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
         update_session(session_id, pending_intent="list_appointments")
         return {"intent": "list_appointments"}
 
+    if _is_booking_side_question(msg):
+        return {"intent": "kb_query"}
+
     if session.pending_intent == "book_appointment":
         # Allow natural smalltalk and side knowledge questions during booking,
         # without losing booking context.
@@ -644,21 +647,6 @@ def _is_booking_side_question(message: str) -> bool:
         "online",
         "process",
     )
-
-
-def _wants_to_reschedule(message: str) -> bool:
-    msg = (message or "").lower()
-    return any(
-        token in msg
-        for token in (
-            "reschedule",
-            "change appointment",
-            "change my appointment",
-            "move appointment",
-            "move my appointment",
-            "change to ",
-        )
-    )
     if any(t in msg for t in kb_tokens):
         return True
 
@@ -674,3 +662,18 @@ def _wants_to_reschedule(message: str) -> bool:
         return True
 
     return False
+
+
+def _wants_to_reschedule(message: str) -> bool:
+    msg = (message or "").lower()
+    return any(
+        token in msg
+        for token in (
+            "reschedule",
+            "change appointment",
+            "change my appointment",
+            "move appointment",
+            "move my appointment",
+            "change to ",
+        )
+    )

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import traceback
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -145,10 +146,25 @@ def chat(req: ChatRequest) -> Dict[str, Any]:
         update_session(session_id, name=maybe_name)
     session = get_session(session_id)
 
-    if settings.use_langgraph:
-        out = graph_runner.run(session_id=session_id, message=msg)
-    else:
-        out = answer_question(settings, kb, msg)
+    try:
+        if settings.use_langgraph:
+            out = graph_runner.run(session_id=session_id, message=msg)
+        else:
+            out = answer_question(settings, kb, msg)
+    except Exception:
+        traceback.print_exc()
+        try:
+            out = answer_question(settings, kb, msg)
+        except Exception:
+            traceback.print_exc()
+            out = {
+                "answer": "I’m having trouble completing that request right now, but I can still help with grounded DPS information once the service recovers.",
+                "refusal": False,
+                "best_similarity": None,
+                "sources": [],
+                "timings_ms": {},
+                "intent": "kb_query",
+            }
     out["session_id"] = session_id
     out["stage"] = session.stage
     if session.name:

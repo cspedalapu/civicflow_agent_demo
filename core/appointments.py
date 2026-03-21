@@ -15,7 +15,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from .config import Settings
-from .database import AppointmentSlot, Booking, get_db, _utcnow
+from .database import AppointmentSlot, Booking, get_db, init_db, _utcnow
 
 
 @dataclass(frozen=True)
@@ -31,6 +31,7 @@ class AppointmentRequest:
 class AppointmentStore:
     def __init__(self, settings: Settings):
         self.settings = settings
+        init_db()
 
     # ── queries ──────────────────────────────────────────────────────
 

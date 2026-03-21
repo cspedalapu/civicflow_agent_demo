@@ -87,6 +87,21 @@ class SessionModel(Base):
     pending_booking_phone = Column(String(20), nullable=True)
     pending_booking_email = Column(String(320), nullable=True)
     pending_booking_service_type = Column(String(50), nullable=True)
+    goal = Column(String(80), nullable=True)
+    subgoal = Column(String(80), nullable=True)
+    active_flow = Column(String(80), nullable=True)
+    booking_stage = Column(String(80), nullable=True)
+    last_offered_slots_json = Column(Text, nullable=True)
+    selected_slot = Column(String(120), nullable=True)
+    selected_booking_id = Column(String(30), nullable=True)
+    unresolved_question = Column(Text, nullable=True)
+    confirmation_status = Column(String(40), nullable=False, default="not_requested")
+    awaiting_confirmation = Column(Boolean, nullable=False, default=False)
+    last_agent_action = Column(String(80), nullable=True)
+    fallback_reason = Column(String(120), nullable=True)
+    escalation_reason = Column(String(120), nullable=True)
+    handoff_recommended = Column(Boolean, nullable=False, default=False)
+    auth_status = Column(String(40), nullable=False, default="unknown")
     created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow, nullable=False)
 
@@ -170,8 +185,27 @@ def _ensure_compatible_schema() -> None:
         return
     with engine.begin() as conn:
         session_cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(sessions)").fetchall()}
-        if "pending_booking_email" not in session_cols:
-            conn.exec_driver_sql("ALTER TABLE sessions ADD COLUMN pending_booking_email VARCHAR(320)")
+        session_migrations = {
+            "pending_booking_email": "ALTER TABLE sessions ADD COLUMN pending_booking_email VARCHAR(320)",
+            "goal": "ALTER TABLE sessions ADD COLUMN goal VARCHAR(80)",
+            "subgoal": "ALTER TABLE sessions ADD COLUMN subgoal VARCHAR(80)",
+            "active_flow": "ALTER TABLE sessions ADD COLUMN active_flow VARCHAR(80)",
+            "booking_stage": "ALTER TABLE sessions ADD COLUMN booking_stage VARCHAR(80)",
+            "last_offered_slots_json": "ALTER TABLE sessions ADD COLUMN last_offered_slots_json TEXT",
+            "selected_slot": "ALTER TABLE sessions ADD COLUMN selected_slot VARCHAR(120)",
+            "selected_booking_id": "ALTER TABLE sessions ADD COLUMN selected_booking_id VARCHAR(30)",
+            "unresolved_question": "ALTER TABLE sessions ADD COLUMN unresolved_question TEXT",
+            "confirmation_status": "ALTER TABLE sessions ADD COLUMN confirmation_status VARCHAR(40) DEFAULT 'not_requested'",
+            "awaiting_confirmation": "ALTER TABLE sessions ADD COLUMN awaiting_confirmation BOOLEAN DEFAULT 0",
+            "last_agent_action": "ALTER TABLE sessions ADD COLUMN last_agent_action VARCHAR(80)",
+            "fallback_reason": "ALTER TABLE sessions ADD COLUMN fallback_reason VARCHAR(120)",
+            "escalation_reason": "ALTER TABLE sessions ADD COLUMN escalation_reason VARCHAR(120)",
+            "handoff_recommended": "ALTER TABLE sessions ADD COLUMN handoff_recommended BOOLEAN DEFAULT 0",
+            "auth_status": "ALTER TABLE sessions ADD COLUMN auth_status VARCHAR(40) DEFAULT 'unknown'",
+        }
+        for col, sql in session_migrations.items():
+            if col not in session_cols:
+                conn.exec_driver_sql(sql)
 
         booking_cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(bookings)").fetchall()}
         if "customer_email" not in booking_cols:

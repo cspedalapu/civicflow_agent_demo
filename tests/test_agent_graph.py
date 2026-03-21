@@ -5,7 +5,7 @@ from core.agent_graph import AgentGraphRunner
 from core.appointments import AppointmentStore
 from core.config import Settings
 from core.database import Booking, get_db
-from core.session_store import update_session
+from core.session_store import get_session, update_session
 
 
 class DummyKB:
@@ -63,11 +63,19 @@ def test_booking_flow_continues_across_turns(tmp_path: Path):
     assert third["intent"] == "book_appointment"
     assert "please pick one of these available slots" in third["answer"].lower()
     assert "1." in third["answer"]
+    session = get_session(session_id)
+    assert session.goal == "book_appointment"
+    assert session.booking_stage == "select_slot"
+    assert len(session.last_offered_slots) >= 1
 
     fourth = runner.run(session_id=session_id, message="1")
     assert fourth["intent"] == "book_appointment"
     assert "appointment is confirmed" in fourth["answer"].lower()
     assert "booking id:" in fourth["answer"].lower()
+    session = get_session(session_id)
+    assert session.booking_stage == "confirmed"
+    assert session.confirmation_status == "confirmed"
+    assert session.selected_booking_id
 
 
 def test_booking_accepts_datetime_only_slot_selection(tmp_path: Path):

@@ -124,6 +124,27 @@ def test_booking_accepts_natural_day_time_reply(tmp_path: Path):
     assert "appointment is confirmed" in out["answer"].lower()
 
 
+def test_reschedule_flow_accepts_letter_choice_after_booking(tmp_path: Path):
+    runner = _runner(tmp_path)
+    session_id = f"s4d-{uuid.uuid4().hex[:8]}"
+    open_slot = _ensure_open_slot(runner.appointment_store)
+    service_type = open_slot.split("|", 1)[0].strip()
+
+    runner.run(session_id=session_id, message="My name is Jamie, I need an appointment")
+    runner.run(session_id=session_id, message="jamie@example.com")
+    runner.run(session_id=session_id, message=service_type)
+    booked = runner.run(session_id=session_id, message="a")
+
+    assert "appointment is confirmed" in booked["answer"].lower()
+
+    reschedule_prompt = runner.run(session_id=session_id, message="no, i want to change appointment to 11:00")
+    assert reschedule_prompt["intent"] == "reschedule_appointment"
+    assert (
+        "appointment has been updated" in reschedule_prompt["answer"].lower()
+        or "please pick one of these available slots" in reschedule_prompt["answer"].lower()
+    )
+
+
 def test_booking_no_slots_resets_service_selection(tmp_path: Path):
     runner = _runner(tmp_path)
     session_id = f"s5-{uuid.uuid4().hex[:8]}"

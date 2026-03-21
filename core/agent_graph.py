@@ -13,7 +13,7 @@ from .config import Settings
 from .name_parser import extract_name
 from .session_store import get_session, update_session
 
-Intent = Literal["book_appointment", "cancel_appointment", "list_appointments", "kb_query", "smalltalk"]
+Intent = Literal["book_appointment", "reschedule_appointment", "cancel_appointment", "list_appointments", "kb_query", "smalltalk"]
 
 
 class AgentState(TypedDict, total=False):
@@ -52,6 +52,7 @@ def _build_graph(runner: AgentGraphRunner):
     graph.add_node("smalltalk", lambda s: _smalltalk_node(runner, s))
     graph.add_node("kb_query", lambda s: _kb_node(runner, s))
     graph.add_node("book_appointment", lambda s: _book_node(runner, s))
+    graph.add_node("reschedule_appointment", lambda s: _reschedule_node(runner, s))
     graph.add_node("cancel_appointment", lambda s: _cancel_node(runner, s))
     graph.add_node("list_appointments", lambda s: _list_node(runner, s))
 
@@ -63,6 +64,7 @@ def _build_graph(runner: AgentGraphRunner):
             "smalltalk": "smalltalk",
             "kb_query": "kb_query",
             "book_appointment": "book_appointment",
+            "reschedule_appointment": "reschedule_appointment",
             "cancel_appointment": "cancel_appointment",
             "list_appointments": "list_appointments",
         },
@@ -70,6 +72,7 @@ def _build_graph(runner: AgentGraphRunner):
     graph.add_edge("smalltalk", END)
     graph.add_edge("kb_query", END)
     graph.add_edge("book_appointment", END)
+    graph.add_edge("reschedule_appointment", END)
     graph.add_edge("cancel_appointment", END)
     graph.add_edge("list_appointments", END)
     return graph.compile()
@@ -93,6 +96,9 @@ def _route_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
     if any(k in msg for k in ("cancel appointment", "cancel booking", "cancel my", "rescind")):
         update_session(session_id, pending_intent="cancel_appointment")
         return {"intent": "cancel_appointment"}
+    if _wants_to_reschedule(msg):
+        update_session(session_id, pending_intent="reschedule_appointment")
+        return {"intent": "reschedule_appointment"}
     if any(k in msg for k in ("my booking", "my appointment", "list appointment", "status appointment", "check booking")):
         update_session(session_id, pending_intent="list_appointments")
         return {"intent": "list_appointments"}
@@ -109,7 +115,7 @@ def _route_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
         update_session(session_id, pending_intent="book_appointment")
         return {"intent": "book_appointment"}
 
-    if session.pending_intent in {"book_appointment", "cancel_appointment", "list_appointments"}:
+    if session.pending_intent in {"book_appointment", "reschedule_appointment", "cancel_appointment", "list_appointments"}:
         return {"intent": session.pending_intent}
 
     if _is_smalltalk_only(msg):
@@ -224,8 +230,8 @@ def _book_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
         session_id,
         pending_intent=None,
         pending_booking_phone=None,
-        pending_booking_email=None,
-        pending_booking_service_type=None,
+        pending_booking_email=email or None,
+        pending_booking_service_type=service_type or None,
     )
     return {
         "answer": (
@@ -236,6 +242,89 @@ def _book_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
             f"Email: {booking.get('customer_email', email)}"
         ),
         "payload": {"refusal": False, "booking": booking},
+    }
+
+
+def _reschedule_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
+    session_id = state["session_id"]
+    message = state.get("message", "")
+    session = get_session(session_id)
+
+    email = _extract_email(message) or session.pending_booking_email or ""
+    if not email:
+        update_session(session_id, pending_intent="reschedule_appointment")
+        return {
+            "answer": "I can help change your appointment. Please share the email address used for the booking.",
+            "payload": {"refusal": False},
+        }
+
+    booking = runner.appointment_store.latest_booking_for_email(email)
+    if not booking:
+        update_session(session_id, pending_intent="reschedule_appointment", pending_booking_email=email)
+        return {
+            "answer": "I couldn't find an active appointment for that email address.",
+            "payload": {"refusal": False},
+        }
+
+    service_type = booking["service_type"]
+    current_slot = booking["slot"]
+    slots = [slot for slot in runner.appointment_store.list_open_slots(service_type=service_type) if slot != current_slot]
+    if not slots:
+        update_session(session_id, pending_intent=None, pending_booking_email=email, pending_booking_service_type=service_type)
+        return {
+            "answer": "I couldn't find any alternative open slots for that appointment right now.",
+            "payload": {"refusal": False},
+        }
+
+    requested_slot = _extract_slot(message)
+    if not requested_slot:
+        requested_slot = _resolve_slot_choice(message, slots)
+
+    update_session(
+        session_id,
+        pending_intent="reschedule_appointment",
+        pending_booking_email=email,
+        pending_booking_service_type=service_type,
+    )
+
+    if not requested_slot:
+        options = _format_slot_options(slots, limit=3)
+        return {
+            "answer": (
+                f"Sure, I can help change your appointment.\n"
+                f"Your current slot is: {current_slot}\n"
+                f"Please pick one of these available slots:\n{options}"
+            ),
+            "payload": {"refusal": False},
+        }
+
+    if requested_slot not in slots:
+        options = _format_slot_options(slots, limit=3)
+        return {
+            "answer": (
+                f"That slot isn't available for a change.\n"
+                f"Your current slot is: {current_slot}\n"
+                f"Please choose one of these available slots:\n{options}"
+            ),
+            "payload": {"refusal": False},
+        }
+
+    updated = runner.appointment_store.reschedule_booking(booking["booking_id"], requested_slot)
+    update_session(
+        session_id,
+        pending_intent=None,
+        pending_booking_email=email,
+        pending_booking_service_type=service_type,
+    )
+    return {
+        "answer": (
+            f"Your appointment has been updated.\n"
+            f"Booking ID: {updated['booking_id']}\n"
+            f"Service: {updated['service_type']}\n"
+            f"New slot: {updated['slot']}\n"
+            f"Email: {updated.get('customer_email', email)}"
+        ),
+        "payload": {"refusal": False, "booking": updated},
     }
 
 
@@ -554,6 +643,21 @@ def _is_booking_side_question(message: str) -> bool:
         "eligibility",
         "online",
         "process",
+    )
+
+
+def _wants_to_reschedule(message: str) -> bool:
+    msg = (message or "").lower()
+    return any(
+        token in msg
+        for token in (
+            "reschedule",
+            "change appointment",
+            "change my appointment",
+            "move appointment",
+            "move my appointment",
+            "change to ",
+        )
     )
     if any(t in msg for t in kb_tokens):
         return True

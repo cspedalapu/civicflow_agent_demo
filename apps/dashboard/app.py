@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import time
 from typing import Any, Dict, List
 
@@ -110,6 +111,40 @@ header[data-testid="stHeader"] {
 }
 .source-card strong { color: var(--dps-navy); }
 
+.workflow-card {
+    background: linear-gradient(145deg, #ffffff 0%, #eef3fb 100%);
+    border: 1px solid #d8e3f2;
+    border-radius: .95rem;
+    padding: .85rem 1rem;
+    margin: .75rem 0 .55rem;
+    box-shadow: var(--shadow-sm);
+}
+.workflow-card .eyebrow {
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #5b6f92;
+    margin-bottom: .35rem;
+    font-weight: 700;
+}
+.workflow-card .title {
+    color: var(--dps-navy-dark);
+    font-size: .98rem;
+    font-weight: 700;
+    margin-bottom: .25rem;
+}
+.workflow-card .meta {
+    color: #43556f;
+    font-size: .83rem;
+    line-height: 1.45;
+}
+.workflow-actions-label {
+    color: var(--dps-navy);
+    font-size: .78rem;
+    font-weight: 700;
+    margin: .55rem 0 .35rem;
+}
+
 .typing-dots span {
     display: inline-block;
     width: 7px;
@@ -219,6 +254,132 @@ def _init_state() -> None:
     st.session_state.setdefault("rag_hits", [])
 
 
+def _queue_prompt(prompt: str) -> None:
+    st.session_state["pending_prompt"] = prompt
+    st.rerun()
+
+
+def _normalize_service_label(service: str) -> str:
+    labels = {
+        "dl_appointment": "Driver License",
+        "state_id": "State ID",
+        "renewal": "Renewal",
+    }
+    return labels.get(service.strip().lower(), service)
+
+
+def _friendly_slot_label(slot: str) -> str:
+    raw = (slot or "").strip()
+    if "|" not in raw:
+        return raw
+    service, when = [part.strip() for part in raw.split("|", 1)]
+    return f"{_normalize_service_label(service)} • {when}"
+
+
+def _parse_slot_actions(content: str) -> List[Dict[str, str]]:
+    actions: List[Dict[str, str]] = []
+    for line in (content or "").splitlines():
+        match = re.match(r"\s*(?:\d+\.\s*)?\(([A-E])\)\s+(.+)$", line.strip(), re.IGNORECASE)
+        if not match:
+            continue
+        option = match.group(1).upper()
+        slot = match.group(2).strip()
+        actions.append({"label": f"Pick {option}", "prompt": option.lower(), "detail": _friendly_slot_label(slot)})
+    return actions
+
+
+def _parse_service_actions(content: str) -> List[Dict[str, str]]:
+    text = (content or "").lower()
+    if "please choose:" not in text:
+        return []
+    if not all(token in text for token in ("dl_appointment", "state_id", "renewal")):
+        return []
+    return [
+        {"label": "Driver License", "prompt": "dl_appointment", "detail": "Book a driver license appointment"},
+        {"label": "State ID", "prompt": "state_id", "detail": "Book a Texas state ID appointment"},
+        {"label": "Renewal", "prompt": "renewal", "detail": "Book a renewal appointment"},
+    ]
+
+
+def _parse_confirmation_actions(content: str) -> List[Dict[str, str]]:
+    text = (content or "").lower()
+    if "reply `yes`" not in text and "reply 'yes'" not in text and "reply yes" not in text:
+        return []
+    return [
+        {"label": "Yes, confirm", "prompt": "yes", "detail": "Approve this change"},
+        {"label": "No, keep current", "prompt": "no", "detail": "Decline and keep the current booking"},
+    ]
+
+
+def _booking_summary(content: str) -> Dict[str, str]:
+    summary: Dict[str, str] = {}
+    patterns = {
+        "Booking ID": r"Booking ID:\s*([A-Z0-9-]+)",
+        "Service": r"Service:\s*(.+)",
+        "Slot": r"(?:New slot|Slot):\s*(.+)",
+        "Email": r"Email:\s*(.+)",
+    }
+    for label, pattern in patterns.items():
+        match = re.search(pattern, content or "", re.IGNORECASE)
+        if match:
+            value = match.group(1).strip()
+            summary[label] = _friendly_slot_label(value) if label == "Slot" else value
+    return summary
+
+
+def _render_workflow_summary(content: str, meta: Dict[str, Any]) -> None:
+    summary = _booking_summary(content)
+    if not summary:
+        return
+
+    title = "Booking Updated" if "New slot" in (content or "") else "Booking Summary"
+    details = []
+    for label in ("Booking ID", "Service", "Slot", "Email"):
+        if label in summary:
+            details.append(f"<strong>{label}:</strong> {summary[label]}")
+    st.markdown(
+        (
+            '<div class="workflow-card">'
+            '<div class="eyebrow">Workflow</div>'
+            f'<div class="title">{title}</div>'
+            f'<div class="meta">{"<br>".join(details)}</div>'
+            "</div>"
+        ),
+        unsafe_allow_html=True,
+    )
+
+
+def _quick_actions_for_message(content: str, meta: Dict[str, Any]) -> List[Dict[str, str]]:
+    actions = _parse_slot_actions(content)
+    if actions:
+        return actions
+
+    actions = _parse_confirmation_actions(content)
+    if actions:
+        return actions
+
+    actions = _parse_service_actions(content)
+    if actions:
+        return actions
+
+    return []
+
+
+def _render_quick_actions(content: str, meta: Dict[str, Any], key_prefix: str) -> None:
+    actions = _quick_actions_for_message(content, meta)
+    if not actions:
+        return
+
+    st.markdown('<div class="workflow-actions-label">Quick Actions</div>', unsafe_allow_html=True)
+    cols = st.columns(min(3, len(actions)))
+    for idx, action in enumerate(actions):
+        with cols[idx % len(cols)]:
+            if st.button(action["label"], key=f"{key_prefix}_action_{idx}", use_container_width=True):
+                _queue_prompt(action["prompt"])
+            if action.get("detail"):
+                st.caption(action["detail"])
+
+
 def _call_chat(api_url: str, session_id: str, message: str) -> Dict[str, Any]:
     payload = {"session_id": session_id or None, "message": message}
     r = requests.post(f"{api_url}/chat", json=payload, timeout=60)
@@ -306,18 +467,25 @@ def _render_assistant_meta(meta: Dict[str, Any]) -> None:
                 )
 
 
-def _render_message(msg: Dict[str, Any]) -> None:
+def _render_message(msg: Dict[str, Any], *, key_prefix: str = "") -> None:
     role = msg["role"]
     avatar = "🤖" if role == "assistant" else "👤"
     with st.chat_message(role, avatar=avatar):
         st.markdown(msg["content"])
         if role == "assistant":
-            _render_assistant_meta(msg.get("meta") or {})
+            meta = msg.get("meta") or {}
+            _render_workflow_summary(msg["content"], meta)
+            _render_assistant_meta(meta)
+            if key_prefix:
+                _render_quick_actions(msg["content"], meta, key_prefix=key_prefix)
 
 
 def _render_chat_history() -> None:
-    for msg in st.session_state["messages"]:
-        _render_message(msg)
+    messages = st.session_state["messages"]
+    last_index = len(messages) - 1
+    for idx, msg in enumerate(messages):
+        key_prefix = f"history_{idx}" if idx == last_index and msg.get("role") == "assistant" else ""
+        _render_message(msg, key_prefix=key_prefix)
 
 
 def _history_to_messages(events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -513,7 +681,9 @@ def _handle_user_message(prompt: str) -> None:
                 time.sleep(0.02)
         msg_placeholder.markdown(answer)
 
+        _render_workflow_summary(answer, meta)
         _render_assistant_meta(meta)
+        _render_quick_actions(answer, meta, key_prefix=f"live_{len(st.session_state['messages'])}")
         st.session_state["messages"].append({"role": "assistant", "content": answer, "meta": meta})
 
 

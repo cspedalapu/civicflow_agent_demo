@@ -21,3 +21,15 @@ def test_extract_name_ignores_hello():
 
 def test_extract_name_ignores_intent_phrase():
     assert extract_name("looking for DL") is None
+
+
+def test_extract_name_ignores_identity_phrase_with_article():
+    assert extract_name("I am an international student") is None
+
+
+def test_extract_name_ignores_identity_phrase_without_article():
+    assert extract_name("I am international student") is None
+
+
+def test_extract_name_keeps_valid_short_name_an():
+    assert extract_name("An") == "An"

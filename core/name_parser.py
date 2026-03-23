@@ -46,6 +46,24 @@ _NON_NAME_TOKENS = _NAME_STOPWORDS | {
     "ok",
 }
 
+_NON_PERSON_IDENTITY_TOKENS = {
+    "international",
+    "student",
+    "customer",
+    "applicant",
+    "parent",
+    "guardian",
+    "minor",
+    "adult",
+    "senior",
+    "resident",
+    "visitor",
+    "immigrant",
+    "employee",
+    "worker",
+    "teacher",
+}
+
 def extract_name(text: str) -> Optional[str]:
     if not text:
         return None
@@ -95,6 +113,12 @@ def _clean(name: str) -> str:
     if kept:
         name = " ".join(kept)
     else:
+        return ""
+
+    lowered = [tok.lower() for tok in kept]
+    if len(lowered) > 1 and lowered[0] in {"a", "an", "the"}:
+        return ""
+    if any(tok in _NON_PERSON_IDENTITY_TOKENS for tok in lowered):
         return ""
 
     # Prevent weird all-caps shouting

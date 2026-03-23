@@ -41,11 +41,36 @@ def test_policy_requests_clarification_for_low_evidence_kb_query():
 
 def test_policy_blocks_tool_use_when_confirmation_pending():
     decision = evaluate_policy(
-        session=SessionState(session_id="s4", awaiting_confirmation=True),
-        message="yes do it",
+        session=SessionState(session_id="s4", awaiting_confirmation=True, auth_status="verified"),
+        message="please wait",
         intent="cancel_appointment",
     )
 
     assert decision.needs_confirmation is True
     assert decision.tool_allowed is False
     assert "PENDING_CONFIRMATION" in decision.reason_codes
+
+
+def test_policy_allows_confirmed_action_after_yes_reply():
+    decision = evaluate_policy(
+        session=SessionState(session_id="s5", awaiting_confirmation=True, auth_status="verified"),
+        message="yes do it",
+        intent="cancel_appointment",
+    )
+
+    assert decision.needs_confirmation is False
+    assert decision.confirmation_resolution == "approved"
+    assert decision.next_action == "proceed"
+    assert "USER_CONFIRMED" in decision.reason_codes
+
+
+def test_policy_captures_declined_confirmation():
+    decision = evaluate_policy(
+        session=SessionState(session_id="s6", awaiting_confirmation=True, auth_status="verified"),
+        message="no keep it",
+        intent="reschedule_appointment",
+    )
+
+    assert decision.confirmation_resolution == "declined"
+    assert decision.next_action == "cancel"
+    assert "USER_DECLINED" in decision.reason_codes

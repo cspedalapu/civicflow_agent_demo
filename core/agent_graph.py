@@ -7,7 +7,7 @@ import re
 
 from langgraph.graph import END, START, StateGraph
 
-from .agent import answer_question
+from .agent import answer_question, build_clarifying_question
 from .appointments import AppointmentRequest, AppointmentStore
 from .config import Settings
 from .name_parser import extract_name
@@ -143,6 +143,108 @@ def _record_intent_state(session_id: str, session, message: str, intent: Intent)
     update_session(session_id, **updates)
 
 
+def _handoff_response(session_id: str) -> AgentState:
+    update_session(
+        session_id,
+        handoff_recommended=True,
+        escalation_reason="user_requested_human",
+        active_flow="handoff",
+        subgoal="human_support",
+        last_agent_action="recommend_handoff",
+        fallback_reason="user_requested_human",
+        awaiting_confirmation=False,
+    )
+    return {
+        "answer": (
+            "A human agent would be the best next step here. "
+            "This demo cannot transfer the conversation directly, but I can pause here so you can continue with DPS support."
+        ),
+        "payload": {"refusal": False, "policy": ["USER_REQUESTED_HUMAN"]},
+    }
+
+
+def _auth_prompt(intent: Intent) -> str:
+    if intent == "reschedule_appointment":
+        return "Before I change an appointment, please share the email address used for the booking."
+    if intent == "cancel_appointment":
+        return "Before I cancel an appointment, please share the email address used for the booking."
+    if intent == "list_appointments":
+        return "Please share the email address used for your booking so I can look it up."
+    return "Please share the email address used for the booking so I can verify it."
+
+
+def _confirmation_prompt(intent: Intent) -> str:
+    if intent == "cancel_appointment":
+        return "Please reply `yes` to confirm the cancellation, or `no` to keep the appointment."
+    if intent == "reschedule_appointment":
+        return "Please reply `yes` to confirm the change, or `no` to keep your current appointment."
+    return "Please reply `yes` to confirm, or `no` to cancel."
+
+
+def _abort_confirmation(session_id: str, intent: Intent) -> AgentState:
+    update_session(
+        session_id,
+        pending_intent=None,
+        awaiting_confirmation=False,
+        confirmation_status="declined",
+        fallback_reason="user_declined_confirmation",
+        last_agent_action="confirmation_declined",
+    )
+    if intent == "cancel_appointment":
+        answer = "Okay, I will keep the appointment as it is."
+    elif intent == "reschedule_appointment":
+        answer = "Okay, I will leave your appointment unchanged."
+    else:
+        answer = "Okay, I will not make that change."
+    return {
+        "answer": answer,
+        "payload": {"refusal": False, "policy": ["USER_DECLINED"]},
+    }
+
+
+def _prompt_for_missing_auth(session_id: str, intent: Intent) -> AgentState:
+    update_session(
+        session_id,
+        pending_intent=intent,
+        auth_status="challenge_required",
+        fallback_reason="missing_auth",
+        last_agent_action="request_authentication",
+    )
+    return {
+        "answer": _auth_prompt(intent),
+        "payload": {"refusal": False, "policy": ["MISSING_AUTH"]},
+    }
+
+
+def _apply_transaction_policy(session_id: str, session, message: str, intent: Intent) -> tuple[Any, Optional[AgentState]]:
+    decision = evaluate_policy(session=session, message=message, intent=intent)
+
+    if decision.handoff_recommended:
+        return decision, _handoff_response(session_id)
+
+    if decision.confirmation_resolution == "declined":
+        return decision, _abort_confirmation(session_id, intent)
+
+    if decision.needs_confirmation:
+        update_session(
+            session_id,
+            pending_intent=intent,
+            awaiting_confirmation=True,
+            confirmation_status="pending",
+            fallback_reason="pending_confirmation",
+            last_agent_action="awaiting_confirmation",
+        )
+        return decision, {
+            "answer": _confirmation_prompt(intent),
+            "payload": {"refusal": False, "policy": ["PENDING_CONFIRMATION"]},
+        }
+
+    if decision.needs_auth:
+        return decision, _prompt_for_missing_auth(session_id, intent)
+
+    return decision, None
+
+
 def _route_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
     session_id = state["session_id"]
     session = get_session(session_id)
@@ -236,19 +338,48 @@ def _smalltalk_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
 
 
 def _kb_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
+    message = state.get("message", "")
+    session_id = state["session_id"]
+    session = get_session(session_id)
+    precheck = evaluate_policy(session=session, message=message, intent="kb_query")
+    if precheck.handoff_recommended:
+        return _handoff_response(session_id)
+
     result = answer_question(runner.settings, runner.kb, state.get("message", ""))
-    session = get_session(state["session_id"])
     decision = evaluate_policy(
         session=session,
-        message=state.get("message", ""),
+        message=message,
         intent="kb_query",
         best_similarity=result.get("best_similarity"),
     )
+    if decision.needs_clarification:
+        update_session(
+            session_id,
+            active_flow="knowledge_support",
+            subgoal="clarify_question",
+            unresolved_question=message,
+            fallback_reason="low_evidence",
+            handoff_recommended=decision.handoff_recommended,
+            escalation_reason="user_requested_human" if decision.handoff_recommended else None,
+            last_agent_action="request_kb_clarification",
+        )
+        answer = result.get("answer") or build_clarifying_question(message)
+        return {
+            "answer": answer,
+            "payload": {
+                "refusal": False,
+                "clarification": True,
+                "sources": result.get("sources", []),
+                "best_similarity": result.get("best_similarity"),
+                "timings_ms": result.get("timings_ms", {}),
+            },
+        }
+
     update_session(
-        state["session_id"],
+        session_id,
         active_flow="knowledge_support",
         subgoal="answered_question",
-        unresolved_question=state.get("message", ""),
+        unresolved_question=message,
         fallback_reason=decision.reason_codes[0].lower() if decision.reason_codes else None,
         handoff_recommended=decision.handoff_recommended,
         escalation_reason="user_requested_human" if decision.handoff_recommended else None,
@@ -261,6 +392,9 @@ def _book_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
     session_id = state["session_id"]
     message = state.get("message", "")
     session = get_session(session_id)
+    decision = evaluate_policy(session=session, message=message, intent="book_appointment")
+    if decision.handoff_recommended:
+        return _handoff_response(session_id)
 
     name = session.name or extract_name(message)
     if not name:
@@ -425,20 +559,16 @@ def _reschedule_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
     session = get_session(session_id)
 
     email = _extract_email(message) or session.pending_booking_email or ""
+    if email and email != session.pending_booking_email:
+        update_session(session_id, pending_booking_email=email, auth_status="verified")
+        session = get_session(session_id)
+
+    decision, blocked = _apply_transaction_policy(session_id, session, message, "reschedule_appointment")
+    if blocked:
+        return blocked
+
     if not email:
-        update_session(
-            session_id,
-            pending_intent="reschedule_appointment",
-            goal="reschedule_appointment",
-            subgoal="collect_email",
-            active_flow="reschedule",
-            booking_stage="identify_booking",
-            last_agent_action="request_email_for_reschedule",
-        )
-        return {
-            "answer": "I can help change your appointment. Please share the email address used for the booking.",
-            "payload": {"refusal": False},
-        }
+        return _prompt_for_missing_auth(session_id, "reschedule_appointment")
 
     booking = runner.appointment_store.latest_booking_for_email(email)
     if not booking:
@@ -446,6 +576,7 @@ def _reschedule_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
             session_id,
             pending_intent="reschedule_appointment",
             pending_booking_email=email,
+            auth_status="challenge_required",
             goal="reschedule_appointment",
             subgoal="identify_booking",
             active_flow="reschedule",
@@ -485,10 +616,14 @@ def _reschedule_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
     if not requested_slot:
         requested_slot = _resolve_slot_choice(message, slots)
 
+    if session.awaiting_confirmation and decision.confirmation_resolution == "approved":
+        requested_slot = session.selected_slot or requested_slot
+
     update_session(
         session_id,
         pending_intent="reschedule_appointment",
         pending_booking_email=email,
+        auth_status="verified",
         pending_booking_service_type=service_type,
         goal="reschedule_appointment",
         subgoal="select_new_slot",
@@ -532,11 +667,39 @@ def _reschedule_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
             "payload": {"refusal": False},
         }
 
+    if not (session.awaiting_confirmation and decision.confirmation_resolution == "approved"):
+        update_session(
+            session_id,
+            pending_intent="reschedule_appointment",
+            pending_booking_email=email,
+            pending_booking_service_type=service_type,
+            goal="reschedule_appointment",
+            subgoal="confirm_change",
+            active_flow="reschedule",
+            booking_stage="confirm_change",
+            selected_booking_id=booking["booking_id"],
+            selected_slot=requested_slot,
+            awaiting_confirmation=True,
+            confirmation_status="pending",
+            fallback_reason="pending_confirmation",
+            last_agent_action="request_reschedule_confirmation",
+        )
+        return {
+            "answer": (
+                f"I found your appointment.\n"
+                f"Current slot: {current_slot}\n"
+                f"Requested new slot: {requested_slot}\n"
+                f"Reply `yes` to confirm the change or `no` to keep the current appointment."
+            ),
+            "payload": {"refusal": False, "policy": ["PENDING_CONFIRMATION"]},
+        }
+
     updated = runner.appointment_store.reschedule_booking(booking["booking_id"], requested_slot)
     update_session(
         session_id,
         pending_intent=None,
         pending_booking_email=email,
+        auth_status="verified",
         pending_booking_service_type=service_type,
         goal="reschedule_appointment",
         subgoal="completed",
@@ -564,9 +727,66 @@ def _reschedule_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
 
 def _cancel_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
     session_id = state["session_id"]
-    msg = state.get("message", "")
-    m = re.search(r"\bAPT-[A-Z0-9]{10}\b", msg.upper())
-    if not m:
+    message = state.get("message", "")
+    session = get_session(session_id)
+
+    email = _extract_email(message) or session.pending_booking_email or ""
+    if email and email != session.pending_booking_email:
+        update_session(session_id, pending_booking_email=email, auth_status="verified")
+        session = get_session(session_id)
+
+    decision, blocked = _apply_transaction_policy(session_id, session, message, "cancel_appointment")
+    if blocked:
+        return blocked
+
+    bookings = runner.appointment_store.bookings_for_email(email)
+    if not bookings:
+        update_session(
+            session_id,
+            pending_intent="cancel_appointment",
+            pending_booking_email=email or None,
+            auth_status="challenge_required",
+            goal="cancel_appointment",
+            subgoal="identify_booking",
+            active_flow="cancel",
+            booking_stage="identify_booking",
+            fallback_reason="booking_not_found",
+            last_agent_action="cancel_not_found",
+        )
+        return {"answer": "I could not find an active booking for that email address.", "payload": {"refusal": False}}
+
+    m = re.search(r"\bAPT-[A-Z0-9]{10}\b", message.upper())
+    booking_id = m.group(0) if m else session.selected_booking_id
+
+    if not booking_id:
+        if len(bookings) == 1:
+            booking_id = bookings[0]["booking_id"]
+            slot = bookings[0]["slot"]
+            update_session(
+                session_id,
+                pending_intent="cancel_appointment",
+                pending_booking_email=email,
+                auth_status="verified",
+                goal="cancel_appointment",
+                subgoal="confirm_cancel",
+                active_flow="cancel",
+                booking_stage="confirm_cancel",
+                selected_booking_id=booking_id,
+                selected_slot=slot,
+                awaiting_confirmation=True,
+                confirmation_status="pending",
+                fallback_reason="pending_confirmation",
+                last_agent_action="request_cancel_confirmation",
+            )
+            return {
+                "answer": (
+                    f"I found booking {booking_id} for {slot}.\n"
+                    f"Reply `yes` to confirm cancellation or `no` to keep the appointment."
+                ),
+                "payload": {"refusal": False, "policy": ["PENDING_CONFIRMATION"]},
+            }
+
+        lines = [f"- {item['booking_id']} | {item['service_type']} | {item['slot']}" for item in bookings]
         update_session(
             session_id,
             pending_intent="cancel_appointment",
@@ -574,17 +794,65 @@ def _cancel_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
             subgoal="identify_booking",
             active_flow="cancel",
             booking_stage="identify_booking",
+            pending_booking_email=email,
+            auth_status="verified",
+            selected_booking_id=None,
             last_agent_action="request_booking_id",
         )
         return {
-            "answer": "Please provide your booking ID in this format: APT-XXXXXXXXXX",
+            "answer": "I found multiple active bookings for that email. Please reply with the booking ID you want to cancel:\n" + "\n".join(lines),
             "payload": {"refusal": False},
         }
-    booking_id = m.group(0)
+
+    booking = next((item for item in bookings if item["booking_id"] == booking_id), None)
+    if not booking:
+        update_session(
+            session_id,
+            pending_intent="cancel_appointment",
+            pending_booking_email=email,
+            auth_status="verified",
+            goal="cancel_appointment",
+            subgoal="identify_booking",
+            active_flow="cancel",
+            booking_stage="identify_booking",
+            fallback_reason="booking_not_found",
+            last_agent_action="cancel_not_found",
+        )
+        return {"answer": "I could not find an active booking with that ID for the verified email address.", "payload": {"refusal": False}}
+
+    if not (session.awaiting_confirmation and decision.confirmation_resolution == "approved"):
+        update_session(
+            session_id,
+            pending_intent="cancel_appointment",
+            pending_booking_email=email,
+            auth_status="verified",
+            goal="cancel_appointment",
+            subgoal="confirm_cancel",
+            active_flow="cancel",
+            booking_stage="confirm_cancel",
+            selected_booking_id=booking_id,
+            selected_slot=booking["slot"],
+            awaiting_confirmation=True,
+            confirmation_status="pending",
+            fallback_reason="pending_confirmation",
+            last_agent_action="request_cancel_confirmation",
+        )
+        return {
+            "answer": (
+                f"Please confirm the cancellation for booking {booking_id}.\n"
+                f"Appointment: {booking['service_type']} | {booking['slot']}\n"
+                f"Reply `yes` to cancel it or `no` to keep it."
+            ),
+            "payload": {"refusal": False, "policy": ["PENDING_CONFIRMATION"]},
+        }
+
     ok = runner.appointment_store.cancel_booking(booking_id)
     if not ok:
         update_session(
             session_id,
+            pending_intent="cancel_appointment",
+            pending_booking_email=email,
+            auth_status="verified",
             goal="cancel_appointment",
             subgoal="identify_booking",
             active_flow="cancel",
@@ -596,6 +864,8 @@ def _cancel_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
     update_session(
         session_id,
         pending_intent=None,
+        pending_booking_email=email,
+        auth_status="verified",
         goal="cancel_appointment",
         subgoal="completed",
         active_flow="cancel",
@@ -611,21 +881,17 @@ def _cancel_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
 
 def _list_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
     session_id = state["session_id"]
-    email = _extract_email(state.get("message", ""))
-    if not email:
-        update_session(
-            session_id,
-            pending_intent="list_appointments",
-            goal="list_appointments",
-            subgoal="collect_email",
-            active_flow="lookup",
-            booking_stage="identify_booking",
-            last_agent_action="request_lookup_email",
-        )
-        return {
-            "answer": "Please share the email address used for your booking so I can look it up.",
-            "payload": {"refusal": False},
-        }
+    message = state.get("message", "")
+    session = get_session(session_id)
+    email = _extract_email(message) or session.pending_booking_email or ""
+    if email and email != session.pending_booking_email:
+        update_session(session_id, pending_booking_email=email, auth_status="verified")
+        session = get_session(session_id)
+
+    decision, blocked = _apply_transaction_policy(session_id, session, message, "list_appointments")
+    if blocked:
+        return blocked
+
     items = runner.appointment_store.bookings_for_email(email)
     if not items:
         update_session(
@@ -636,6 +902,7 @@ def _list_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
             active_flow="lookup",
             booking_stage="identify_booking",
             pending_booking_email=email,
+            auth_status="challenge_required",
             fallback_reason="booking_not_found",
             last_agent_action="lookup_not_found",
         )
@@ -648,6 +915,7 @@ def _list_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
         active_flow="lookup",
         booking_stage="completed",
         pending_booking_email=email,
+        auth_status="verified",
         selected_booking_id=items[0]["booking_id"],
         last_agent_action="listed_appointments",
         fallback_reason=None,

@@ -17,9 +17,14 @@ Industry-style, grounded customer support agent for Driver License and State ID 
 - Guardrails:
   - refusal on weak evidence
   - clarifying questions on partially relevant evidence
+- Policy engine:
+  - human handoff detection
+  - auth gating for booking lookup/mutation
+  - confirmation before cancel/reschedule actions
 - Agentic routing:
   - `kb_query`
   - `book_appointment`
+  - `reschedule_appointment`
   - `cancel_appointment`
   - `list_appointments`
 
@@ -43,6 +48,7 @@ core/
   guardrails.py                # relevance checks
   agent.py                     # grounded answer generation
   agent_graph.py               # LangGraph orchestration
+  policies.py                  # policy engine for auth/confirmation/handoff
   appointments.py              # booking store/tooling
 knowledge_base/
   sources/                     # authoritative KB docs (tracked)

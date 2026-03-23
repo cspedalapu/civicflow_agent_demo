@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import uuid
 
 from core.agent_graph import AgentGraphRunner
@@ -149,8 +150,67 @@ def test_reschedule_flow_accepts_letter_choice_after_booking(tmp_path: Path):
     assert reschedule_prompt["intent"] == "reschedule_appointment"
     assert (
         "appointment has been updated" in reschedule_prompt["answer"].lower()
+        or "reply `yes` to confirm the change" in reschedule_prompt["answer"].lower()
         or "please pick one of these available slots" in reschedule_prompt["answer"].lower()
     )
+
+
+def test_reschedule_requires_confirmation_before_update(tmp_path: Path):
+    runner = _runner(tmp_path)
+    booking_session = f"s10-book-{uuid.uuid4().hex[:8]}"
+    change_session = f"s10-change-{uuid.uuid4().hex[:8]}"
+    email = f"phase2-{uuid.uuid4().hex[:8]}@example.com"
+    open_slot = _ensure_open_slot(runner.appointment_store)
+    service_type = open_slot.split("|", 1)[0].strip()
+
+    runner.run(session_id=booking_session, message="My name is Jamie, I need an appointment")
+    runner.run(session_id=booking_session, message=email)
+    runner.run(session_id=booking_session, message=service_type)
+    booked = runner.run(session_id=booking_session, message="a")
+    assert "appointment is confirmed" in booked["answer"].lower()
+
+    first = runner.run(session_id=change_session, message="change my appointment")
+    assert "share the email address" in first["answer"].lower()
+
+    second = runner.run(session_id=change_session, message=email)
+    assert "please pick one of these available slots" in second["answer"].lower()
+
+    third = runner.run(session_id=change_session, message="1")
+    assert "reply `yes` to confirm the change" in third["answer"].lower()
+
+    fourth = runner.run(session_id=change_session, message="yes")
+    assert "appointment has been updated" in fourth["answer"].lower()
+
+
+def test_cancel_requires_auth_and_confirmation(tmp_path: Path):
+    runner = _runner(tmp_path)
+    booking_session = f"s11-book-{uuid.uuid4().hex[:8]}"
+    cancel_session = f"s11-cancel-{uuid.uuid4().hex[:8]}"
+    email = f"phase2-cancel-{uuid.uuid4().hex[:8]}@example.com"
+    open_slot = _ensure_open_slot(runner.appointment_store)
+    service_type = open_slot.split("|", 1)[0].strip()
+
+    runner.run(session_id=booking_session, message="My name is Casey, I need an appointment")
+    runner.run(session_id=booking_session, message=email)
+    runner.run(session_id=booking_session, message=service_type)
+    booked = runner.run(session_id=booking_session, message="a")
+    booking_id = re.search(r"APT-[A-Z0-9]{10}", booked["answer"])
+    assert booking_id is not None
+
+    first = runner.run(session_id=cancel_session, message=f"cancel appointment {booking_id.group(0)}")
+    assert "share the email address" in first["answer"].lower()
+
+    second = runner.run(session_id=cancel_session, message=email)
+    assert "reply `yes` to confirm cancellation" in second["answer"].lower()
+
+    third = runner.run(session_id=cancel_session, message="yes")
+    assert "has been cancelled" in third["answer"].lower()
+
+
+def test_handoff_request_short_circuits_transaction_flow(tmp_path: Path):
+    runner = _runner(tmp_path)
+    out = runner.run(session_id=f"s12-{uuid.uuid4().hex[:8]}", message="I need a live agent to change my appointment")
+    assert "human agent would be the best next step" in out["answer"].lower()
 
 
 def test_booking_no_slots_resets_service_selection(tmp_path: Path):

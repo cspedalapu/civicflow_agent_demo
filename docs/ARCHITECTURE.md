@@ -23,6 +23,18 @@ Deliver an industry-grade customer agent for DL/ID support that can:
 
 This keeps retrieval and transactional workflows separated and testable.
 
+## Phase 2 Policy Engine
+`core/policies.py` is now a first-class policy engine instead of a passive helper.
+
+It evaluates each turn for:
+- human handoff requests,
+- weak-evidence KB queries that should ask for clarification,
+- auth requirements before exposing or mutating bookings,
+- pending confirmation gates before destructive actions like cancel/reschedule.
+
+`core/agent_graph.py` enforces those decisions before appointment mutations run, so
+policy outcomes can stop, redirect, or defer a flow instead of only logging metadata.
+
 ## Appointment Tooling
 `core/appointments.py`:
 - persistent JSON store (`data/appointments.json`)
@@ -39,13 +51,14 @@ This keeps retrieval and transactional workflows separated and testable.
 - `/ingest`, `/retrieve`, `/history/{session_id}`
 
 ## Session Model
-`core/session_store.py` maintains in-memory session state:
+`core/session_store.py` exposes a dataclass facade over SQLite-backed session state:
 - `new -> awaiting_name -> active`
 - name personalization
-- safe lock semantics for concurrent access
+- pending booking identity and selected booking metadata
+- confirmation, escalation, and auth status used by the policy engine
 
 ## Observability
-- chat/event logs: `data/conversations.jsonl`
+- chat/event logs: `chat_messages` table plus logger history helpers
 - optional LangSmith tracing via environment configuration
 
 ## GPU Usage

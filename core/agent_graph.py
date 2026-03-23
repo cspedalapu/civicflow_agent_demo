@@ -282,6 +282,10 @@ def _route_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
         update_session(session_id, pending_intent="reschedule_appointment")
         _record_intent_state(session_id, session, msg, "reschedule_appointment")
         return {"intent": "reschedule_appointment"}
+    if _resolve_post_booking_correction_slot(session, msg):
+        update_session(session_id, pending_intent="reschedule_appointment")
+        _record_intent_state(session_id, session, msg, "reschedule_appointment")
+        return {"intent": "reschedule_appointment"}
     if any(k in msg for k in ("my booking", "my appointment", "list appointment", "status appointment", "check booking")):
         update_session(session_id, pending_intent="list_appointments")
         _record_intent_state(session_id, session, msg, "list_appointments")
@@ -528,12 +532,13 @@ def _book_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
         pending_intent=None,
         pending_booking_phone=None,
         pending_booking_email=email or None,
+        auth_status="verified",
         pending_booking_service_type=service_type or None,
         goal="book_appointment",
         subgoal="completed",
         active_flow="booking",
         booking_stage="confirmed",
-        last_offered_slots=[],
+        last_offered_slots=slots[:3],
         selected_slot=requested_slot,
         selected_booking_id=booking["booking_id"],
         confirmation_status="confirmed",
@@ -612,7 +617,8 @@ def _reschedule_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
             "payload": {"refusal": False},
         }
 
-    requested_slot = _extract_slot(message)
+    correction_slot = _resolve_post_booking_correction_slot(session, message, current_slot=current_slot)
+    requested_slot = _extract_slot(message) or correction_slot
     if not requested_slot:
         requested_slot = _resolve_slot_choice(message, slots)
 
@@ -705,7 +711,7 @@ def _reschedule_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
         subgoal="completed",
         active_flow="reschedule",
         booking_stage="confirmed",
-        last_offered_slots=[],
+        last_offered_slots=slots[:3],
         selected_slot=requested_slot,
         selected_booking_id=booking["booking_id"],
         confirmation_status="confirmed",
@@ -1041,6 +1047,15 @@ def _parse_slot_index_choice(text: str) -> Optional[int]:
     if m:
         return letters[m.group(1)]
 
+    # "sorry b", "actually 2", "meant c", etc.
+    m = re.search(r"\b(?:sorry|actually|meant|instead|rather)\s+([a-e])\b", t)
+    if m:
+        return letters[m.group(1)]
+
+    m = re.search(r"\b(?:sorry|actually|meant|instead|rather)\s+(\d{1,2})\b", t)
+    if m:
+        return int(m.group(1))
+
     # Common ordinals.
     if "first" in t:
         return 1
@@ -1112,6 +1127,35 @@ def _service_from_slot(slot: str) -> Optional[str]:
     if not slot:
         return None
     return slot.split("|", 1)[0].strip().lower()
+
+
+def _resolve_post_booking_correction_slot(
+    session,
+    message: str,
+    *,
+    current_slot: Optional[str] = None,
+) -> str:
+    if not session.selected_booking_id:
+        return ""
+    if session.confirmation_status != "confirmed":
+        return ""
+    offered_slots = session.last_offered_slots or []
+    if len(offered_slots) < 2:
+        return ""
+
+    active_slot = (current_slot or session.selected_slot or "").strip().lower()
+    requested_slot = _extract_slot(message)
+    if not requested_slot:
+        requested_slot = _resolve_slot_choice(message, offered_slots)
+    if not requested_slot:
+        return ""
+
+    requested_slot = requested_slot.strip().lower()
+    if not active_slot or requested_slot == active_slot:
+        return ""
+    if requested_slot not in {slot.lower() for slot in offered_slots}:
+        return ""
+    return requested_slot
 
 
 def _wants_to_reset_flow(message: str) -> bool:

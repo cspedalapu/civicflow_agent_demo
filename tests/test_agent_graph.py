@@ -182,6 +182,35 @@ def test_reschedule_requires_confirmation_before_update(tmp_path: Path):
     assert "appointment has been updated" in fourth["answer"].lower()
 
 
+def test_post_booking_correction_reinterprets_apology_choice(tmp_path: Path):
+    runner = _runner(tmp_path)
+    session_id = f"s10-correct-{uuid.uuid4().hex[:8]}"
+    open_slot = _ensure_open_slot(runner.appointment_store)
+    service_type = open_slot.split("|", 1)[0].strip()
+    runner.appointment_store._seed_additional_slots(service_type=service_type)
+
+    runner.run(session_id=session_id, message="My name is Taylor, I need an appointment")
+    runner.run(session_id=session_id, message="taylor@example.com")
+    offer = runner.run(session_id=session_id, message=service_type)
+    assert "please pick one of these available slots" in offer["answer"].lower()
+
+    session = get_session(session_id)
+    assert len(session.last_offered_slots) >= 2
+    corrected_slot = session.last_offered_slots[1]
+
+    booked = runner.run(session_id=session_id, message="a")
+    assert "appointment is confirmed" in booked["answer"].lower()
+
+    correction = runner.run(session_id=session_id, message="sorry b")
+    assert correction["intent"] == "reschedule_appointment"
+    assert "reply `yes` to confirm the change" in correction["answer"].lower()
+    assert corrected_slot in correction["answer"]
+
+    updated = runner.run(session_id=session_id, message="yes")
+    assert "appointment has been updated" in updated["answer"].lower()
+    assert corrected_slot in updated["answer"]
+
+
 def test_cancel_requires_auth_and_confirmation(tmp_path: Path):
     runner = _runner(tmp_path)
     booking_session = f"s11-book-{uuid.uuid4().hex[:8]}"

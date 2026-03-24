@@ -96,7 +96,9 @@ def _clean(name: str) -> str:
     parts = re.split(r"\.\s+", name, maxsplit=1)
     if len(parts) > 1 and parts[1]:
         first_tail_word = re.findall(r"[A-Za-z]+", parts[1].lower())
-        if first_tail_word and first_tail_word[0] in _NAME_STOPWORDS:
+        # A new sentence that starts with "I ..." is almost certainly the user
+        # continuing their request, not part of their name.
+        if first_tail_word and first_tail_word[0] in (_NAME_STOPWORDS | {"i"}):
             name = parts[0].strip()
 
     # Truncate when intent words start after the name.

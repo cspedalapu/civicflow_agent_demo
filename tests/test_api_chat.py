@@ -40,6 +40,41 @@ def test_chat_answers_support_question_when_name_and_question_share_turn(monkeyp
     assert session.stage == "active"
 
 
+def test_chat_handles_name_followed_by_new_sentence_question(monkeypatch):
+    session_id = f"api-chat-sentence-{uuid.uuid4().hex[:8]}"
+    captured = {}
+
+    def fake_run(session_id: str, message: str):
+        captured["session_id"] = session_id
+        captured["message"] = message
+        return {
+            "answer": "For driver license document requirements, please bring the required identity and residency documents.",
+            "refusal": False,
+            "sources": [],
+            "best_similarity": 0.72,
+            "timings_ms": {},
+            "intent": "kb_query",
+        }
+
+    monkeypatch.setattr("apps.api.main.graph_runner.run", fake_run)
+
+    out = chat(
+        ChatRequest(
+            session_id=session_id,
+            message="hello, i am chandra. I have a question on driving license document requirements.",
+        )
+    )
+
+    assert captured["session_id"] == session_id
+    assert captured["message"] == "I have a question on driving license document requirements."
+    assert out["name"] == "chandra"
+    assert "how can i help you today" not in out["answer"].lower()
+
+    session = get_session(session_id)
+    assert session.name == "chandra"
+    assert session.stage == "active"
+
+
 def test_chat_keeps_name_only_turn_as_greeting():
     session_id = f"api-chat-name-{uuid.uuid4().hex[:8]}"
 

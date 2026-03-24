@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any, Dict, Optional
+import re
 
 # ── Load .env BEFORE any core imports so env vars are available ──────────
 from dotenv import load_dotenv
@@ -113,26 +114,42 @@ def _looks_like_support_question(text: str) -> bool:
     return any(k in t for k in keywords)
 
 
+def _strip_explicit_name_clause(text: str, name: str) -> str:
+    if not text or not name:
+        return (text or "").strip()
+
+    pattern = re.compile(
+        rf"^\s*(?:my name is|i am|i'm|this is|call me)\s+{re.escape(name)}(?:\s*[,.!?-]\s*|\s+and\s+|\s+)?",
+        re.IGNORECASE,
+    )
+    cleaned = pattern.sub("", text, count=1).strip()
+    return cleaned
+
+
 @app.post("/chat")
 def chat(req: ChatRequest) -> Dict[str, Any]:
     session_id = ensure_session_id(req.session_id)
-    msg = (req.message or "").strip()
+    raw_msg = (req.message or "").strip()
+    msg = raw_msg
     session = get_session(session_id)
 
     if session.stage in {"new", "awaiting_name"} and not session.name:
         name = extract_name(msg)
         if name:
+            remainder = _strip_explicit_name_clause(msg, name)
             update_session(session_id, name=name, stage="active")
-            out = {
-                "answer": f"Nice to meet you, {name}. How can I help you today?",
-                "refusal": False,
-                "session_id": session_id,
-                "stage": "active",
-                "name": name,
-            }
-            log_chat_event({"session_id": session_id, "stage": "active", "name": name, "question": msg, "answer": out["answer"]})
-            out["session"] = build_session_snapshot(session_id)
-            return out
+            if not remainder or not _looks_like_support_question(remainder):
+                out = {
+                    "answer": f"Nice to meet you, {name}. How can I help you today?",
+                    "refusal": False,
+                    "session_id": session_id,
+                    "stage": "active",
+                    "name": name,
+                }
+                log_chat_event({"session_id": session_id, "stage": "active", "name": name, "question": raw_msg, "answer": out["answer"]})
+                out["session"] = build_session_snapshot(session_id)
+                return out
+            msg = remainder
 
         # Keep the DPS-style name prompt for short/opening messages, but do not block
         # users who directly ask a DL/ID question from getting a grounded answer.
@@ -153,6 +170,9 @@ def chat(req: ChatRequest) -> Dict[str, Any]:
     maybe_name = extract_name(msg)
     if maybe_name and _is_explicit_name_message(msg):
         update_session(session_id, name=maybe_name)
+        stripped = _strip_explicit_name_clause(msg, maybe_name)
+        if stripped and _looks_like_support_question(stripped):
+            msg = stripped
     session = get_session(session_id)
 
     if settings.use_langgraph:
@@ -172,7 +192,7 @@ def chat(req: ChatRequest) -> Dict[str, Any]:
             "session_id": session_id,
             "stage": session.stage,
             "name": session.name,
-            "question": msg,
+            "question": raw_msg,
             "answer": out.get("answer"),
             "refusal": out.get("refusal"),
             "best_similarity": out.get("best_similarity"),

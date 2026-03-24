@@ -1280,7 +1280,10 @@ def _handle_user_message(prompt: str) -> None:
                         msg_placeholder.markdown(revealed)
                         time.sleep(0.02)
                 msg_placeholder.markdown(answer)
-                st.caption("Temporary fallback mode: answer assembled from retrieved DPS references.")
+                if meta.get("clarification"):
+                    st.caption("Temporary fallback mode: asking a clarifying question before giving a specific DPS answer.")
+                else:
+                    st.caption("Temporary fallback mode: answer assembled from retrieved DPS references.")
                 _render_assistant_meta(meta)
                 st.session_state["messages"].append({"role": "assistant", "content": answer, "meta": meta})
                 return

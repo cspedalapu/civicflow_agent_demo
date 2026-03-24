@@ -101,6 +101,14 @@ python scripts/ingest_kb.py
 ```
 
 ## Run the Application
+### One-click startup on Windows
+Double-click [start_civicflow_demo.bat](d:/#Code/VS%20Code/civicflow_agent_demo/start_civicflow_demo.bat) from the repo root.
+
+It will:
+- start the FastAPI backend,
+- start the Streamlit dashboard,
+- open the dashboard in your browser.
+
 ### Run API server
 ```bash
 python scripts/run_api.py
@@ -194,6 +202,10 @@ python scripts/run_api.py
 2. Start dashboard (new terminal):
 ```bash
 python scripts/run_dashboard.py
+```
+Windows shortcut:
+```bash
+start_civicflow_demo.bat
 ```
 3. Demo flow:
 - Open dashboard and ask a DL question.

@@ -20,6 +20,11 @@ if errorlevel 1 (
     exit /b 1
 )
 
+echo Clearing any old CivicFlow processes on ports 8000 and 8501...
+for /f "tokens=5" %%P in ('netstat -ano ^| findstr ":8000" ^| findstr "LISTENING"') do taskkill /PID %%P /F >nul 2>nul
+for /f "tokens=5" %%P in ('netstat -ano ^| findstr ":8501" ^| findstr "LISTENING"') do taskkill /PID %%P /F >nul 2>nul
+timeout /t 1 /nobreak >nul
+
 echo Starting CivicFlow API...
 start "CivicFlow API" cmd /k "cd /d ""%ROOT%"" && set PYTHONPATH=%ROOT% && ""%PYTHON%"" -m uvicorn apps.api.main:app --host 127.0.0.1 --port 8000"
 
@@ -54,6 +59,8 @@ exit /b 0
 :dry_run
 echo ROOT=%ROOT%
 echo PYTHON=%PYTHON%
+echo for /f "tokens=5" %%%%P in ('netstat -ano ^| findstr ":8000" ^| findstr "LISTENING"') do taskkill /PID %%%%P /F
+echo for /f "tokens=5" %%%%P in ('netstat -ano ^| findstr ":8501" ^| findstr "LISTENING"') do taskkill /PID %%%%P /F
 echo start "CivicFlow API" cmd /k "cd /d ""%ROOT%"" ^&^& set PYTHONPATH=%ROOT% ^&^& ""%PYTHON%"" -m uvicorn apps.api.main:app --host 127.0.0.1 --port 8000"
 echo powershell -NoProfile -Command "for ($i=0; $i -lt 45; $i++) { try { Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/health ^| Out-Null; exit 0 } catch { Start-Sleep -Seconds 1 } }; exit 1"
 echo start "CivicFlow Dashboard" cmd /k "cd /d ""%ROOT%"" ^&^& set PYTHONPATH=%ROOT% ^&^& ""%PYTHON%"" -m streamlit run apps\dashboard\app.py --server.headless true --browser.gatherUsageStats false"

@@ -107,6 +107,7 @@ def evaluate_policy(
     message: str,
     intent: Optional[str] = None,
     best_similarity: Optional[float] = None,
+    clarify_min_similarity: float = 0.25,
 ) -> PolicyDecision:
     msg = (message or "").strip().lower()
     reasons: list[str] = []
@@ -133,7 +134,7 @@ def evaluate_policy(
 
     if intent == "kb_query":
         response_mode = "knowledge"
-        if best_similarity is not None and best_similarity < 0.25:
+        if best_similarity is not None and best_similarity < clarify_min_similarity:
             reasons.append("LOW_EVIDENCE")
             needs_clarification = True
             next_action = "clarify"

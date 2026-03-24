@@ -431,6 +431,7 @@ def _kb_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
         message=message,
         intent="kb_query",
         best_similarity=result.get("best_similarity"),
+        clarify_min_similarity=runner.settings.clarify_min_similarity,
     )
     if decision.needs_clarification:
         update_session(

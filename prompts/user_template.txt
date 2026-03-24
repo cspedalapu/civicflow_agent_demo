@@ -6,4 +6,7 @@ EVIDENCE (use ONLY this):
 
 INSTRUCTIONS:
 - Answer using only EVIDENCE.
-- If EVIDENCE is insufficient, respond: "I don’t have that information in my knowledge base."
+- Give the answer first in plain language.
+- Keep the response concise and helpful.
+- Do not include a "Sources" heading unless the user explicitly asks for citations.
+- If EVIDENCE is insufficient, respond: "I don't have that information in my knowledge base."

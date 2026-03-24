@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 from typing import Any, Dict, List
 
 from .config import Settings
@@ -85,10 +86,66 @@ class LLMClient:
 def extractive_fallback(question: str, hits: List[Dict[str, Any]]) -> str:
     if not hits:
         return "I don't have that information in my knowledge base."
-    top = hits[0]
-    snippet = (top.get("text") or "").strip()[:800]
-    title = (top.get("metadata") or {}).get("title") or "Source"
-    return (
-        f"Based on my knowledge base ({title}), here's what I found:\n\n{snippet}\n\n"
-        "If you want, tell me which part you need and I'll narrow it down."
-    )
+
+    def _lead_for_question(text: str) -> str:
+        q = (text or "").strip().lower()
+        if any(token in q for token in ("document", "documents", "what to bring", "carry", "bring")):
+            return (
+                "For this DPS request, you should bring the required application and proof documents, and review the "
+                "official checklist before visiting the office."
+            )
+        if any(token in q for token in ("book", "schedule", "appointment")):
+            return "For appointments, use the official DPS appointment information page and scheduler for the next step."
+        if "renew" in q and "online" in q:
+            return "Texas DPS does allow online renewal for eligible applicants."
+        if "cdl" in q or "commercial" in q:
+            return "CDL requirements depend on the license class and endorsements you need."
+        if "state id" in q or "identification card" in q or "id card" in q:
+            return "For a Texas ID card, DPS expects the required identity and residency documents at the office visit."
+        return "Here is the best answer I could assemble from the DPS knowledge base."
+
+    def _clean_text(text: str) -> str:
+        cleaned = (text or "").replace("“", '"').replace("”", '"').replace("’", "'")
+        cleaned = re.sub(r"https?://\S+", "", cleaned)
+        pieces: List[str] = []
+        for raw in cleaned.splitlines():
+            line = raw.strip(" -\t")
+            lower = line.lower()
+            if not line:
+                continue
+            if lower.startswith(("##", "#", "q1.", "q2.", "q3.", "related services", "official links", "recommended wording")):
+                continue
+            if len(line) < 20:
+                continue
+            pieces.append(line)
+        return " ".join(pieces)
+
+    def _supporting_sentences(items: List[Dict[str, Any]], limit: int = 2) -> List[str]:
+        sentences: List[str] = []
+        seen: set[str] = set()
+        for item in items[:3]:
+            cleaned = _clean_text(item.get("text") or "")
+            for piece in re.split(r"(?<=[.!?])\s+", cleaned):
+                sentence = piece.strip()
+                normalized = sentence.lower()
+                if len(sentence) < 40:
+                    continue
+                if normalized in seen or normalized.endswith("?"):
+                    continue
+                if normalized.startswith(("if a customer requests", "checklist pdf", "appointment scheduler", "appointment information page")):
+                    continue
+                seen.add(normalized)
+                sentences.append(sentence)
+                if len(sentences) >= limit:
+                    return sentences
+        return sentences
+
+    lead = _lead_for_question(question)
+    support = _supporting_sentences(hits, limit=2)
+    if not support:
+        return lead
+
+    merged = " ".join(support)
+    if merged.lower() in lead.lower():
+        return lead
+    return f"{lead}\n\n{merged}"

@@ -19,9 +19,15 @@ def enough_evidence(settings: Settings, question: str, hits: List[Dict[str, Any]
     if not hits:
         return (False, {"best_similarity": 0.0, "keyword_overlap": 0.0})
 
-    best = float(hits[0].get("similarity", 0.0))
-    top_text = hits[0].get("text") or ""
-    overlap = keyword_overlap_ratio(question, top_text)
+    scored_hits = [
+        {
+            "similarity": float(hit.get("similarity", 0.0)),
+            "keyword_overlap": keyword_overlap_ratio(question, hit.get("text") or ""),
+        }
+        for hit in hits[: min(len(hits), 3)]
+    ]
+    best = max(item["similarity"] for item in scored_hits)
+    overlap = max(item["keyword_overlap"] for item in scored_hits)
 
     ok = (best >= settings.high_similarity_override) or (
         best >= settings.min_similarity and overlap >= settings.min_keyword_overlap

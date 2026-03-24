@@ -12,7 +12,8 @@ from .appointments import AppointmentRequest, AppointmentStore
 from .config import Settings
 from .handoff import ensure_handoff
 from .name_parser import extract_name
-from .policies import TRANSACTION_INTENTS, evaluate_policy
+from .policies import TRANSACTION_INTENTS, evaluate_policy, parse_confirmation_response
+from .router import RouteDecision, route_intent
 from .session_store import get_session, update_session
 
 Intent = Literal["book_appointment", "reschedule_appointment", "cancel_appointment", "list_appointments", "kb_query", "smalltalk"]
@@ -250,83 +251,147 @@ def _apply_transaction_policy(session_id: str, session, message: str, intent: In
 def _route_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
     session_id = state["session_id"]
     session = get_session(session_id)
-    msg = (state.get("message") or "").strip().lower()
+    message = (state.get("message") or "").strip()
+    msg = message.lower()
 
     if _wants_to_reset_flow(msg):
-        update_session(
-            session_id,
-            pending_intent=None,
-            pending_booking_phone=None,
-            pending_booking_email=None,
-            pending_booking_service_type=None,
-            goal=None,
-            subgoal=None,
-            active_flow="knowledge_support",
-            booking_stage=None,
-            last_offered_slots=[],
-            selected_slot=None,
-            selected_booking_id=None,
-            unresolved_question=None,
-            confirmation_status="not_requested",
-            awaiting_confirmation=False,
-            last_agent_action="reset_flow",
-            fallback_reason=None,
-            escalation_reason=None,
-            handoff_recommended=False,
-            handoff_ticket_id=None,
-            handoff_status="none",
-            handoff_assignee=None,
-            handoff_claimed_at=None,
-            handoff_resolved_at=None,
-        )
+        _reset_flow_state(session_id)
         return {"intent": "kb_query"}
 
-    if any(k in msg for k in ("cancel appointment", "cancel booking", "cancel my", "rescind")):
-        update_session(session_id, pending_intent="cancel_appointment")
-        _record_intent_state(session_id, session, msg, "cancel_appointment")
-        return {"intent": "cancel_appointment"}
-    if _wants_to_reschedule(msg):
-        update_session(session_id, pending_intent="reschedule_appointment")
-        _record_intent_state(session_id, session, msg, "reschedule_appointment")
-        return {"intent": "reschedule_appointment"}
-    if _resolve_post_booking_correction_slot(session, msg):
-        update_session(session_id, pending_intent="reschedule_appointment")
-        _record_intent_state(session_id, session, msg, "reschedule_appointment")
-        return {"intent": "reschedule_appointment"}
-    if any(k in msg for k in ("my booking", "my appointment", "list appointment", "status appointment", "check booking")):
-        update_session(session_id, pending_intent="list_appointments")
-        _record_intent_state(session_id, session, msg, "list_appointments")
-        return {"intent": "list_appointments"}
+    forced_intent = _forced_transaction_intent(session, message)
+    if forced_intent:
+        _prepare_route_state(session_id, session, msg, forced_intent)
+        return {"intent": forced_intent}
 
-    if _is_booking_side_question(msg):
-        _record_intent_state(session_id, session, msg, "kb_query")
-        return {"intent": "kb_query"}
+    rule_intent = _rule_based_intent(session, msg)
+    chosen_intent = rule_intent
+
+    llm_decision = route_intent(runner.settings, session, message)
+    if llm_decision and llm_decision.confidence >= runner.settings.router_min_confidence:
+        chosen_intent = _resolve_router_choice(session, msg, llm_decision, rule_intent)
+
+    _prepare_route_state(session_id, session, msg, chosen_intent)
+    return {"intent": chosen_intent}
+
+
+def _reset_flow_state(session_id: str) -> None:
+    update_session(
+        session_id,
+        pending_intent=None,
+        pending_booking_phone=None,
+        pending_booking_email=None,
+        pending_booking_service_type=None,
+        goal=None,
+        subgoal=None,
+        active_flow="knowledge_support",
+        booking_stage=None,
+        last_offered_slots=[],
+        selected_slot=None,
+        selected_booking_id=None,
+        unresolved_question=None,
+        confirmation_status="not_requested",
+        awaiting_confirmation=False,
+        last_agent_action="reset_flow",
+        fallback_reason=None,
+        escalation_reason=None,
+        handoff_recommended=False,
+        handoff_ticket_id=None,
+        handoff_status="none",
+        handoff_assignee=None,
+        handoff_claimed_at=None,
+        handoff_resolved_at=None,
+    )
+
+
+def _prepare_route_state(session_id: str, session, message: str, intent: Intent) -> None:
+    if intent in TRANSACTION_INTENTS:
+        update_session(session_id, pending_intent=intent)
+    _record_intent_state(session_id, session, message, intent)
+
+
+def _rule_based_intent(session, message: str) -> Intent:
+    if any(k in message for k in ("cancel appointment", "cancel booking", "cancel my", "rescind")):
+        return "cancel_appointment"
+    if _wants_to_reschedule(message):
+        return "reschedule_appointment"
+    if _resolve_post_booking_correction_slot(session, message):
+        return "reschedule_appointment"
+    if any(k in message for k in ("my booking", "my appointment", "list appointment", "status appointment", "check booking")):
+        return "list_appointments"
+
+    if _is_booking_side_question(message):
+        return "kb_query"
 
     if session.pending_intent == "book_appointment":
-        # Allow natural smalltalk and side knowledge questions during booking,
-        # without losing booking context.
-        if _is_smalltalk_only(msg):
-            _record_intent_state(session_id, session, msg, "smalltalk")
-            return {"intent": "smalltalk"}
-        if _is_booking_side_question(msg):
-            _record_intent_state(session_id, session, msg, "kb_query")
-            return {"intent": "kb_query"}
+        if _is_smalltalk_only(message):
+            return "smalltalk"
+        if _is_booking_side_question(message):
+            return "kb_query"
 
-    if any(k in msg for k in ("book", "appointment", "schedule", "slot")):
-        update_session(session_id, pending_intent="book_appointment")
-        _record_intent_state(session_id, session, msg, "book_appointment")
-        return {"intent": "book_appointment"}
+    if any(k in message for k in ("book", "appointment", "schedule", "slot")):
+        return "book_appointment"
 
     if session.pending_intent in {"book_appointment", "reschedule_appointment", "cancel_appointment", "list_appointments"}:
-        _record_intent_state(session_id, session, msg, session.pending_intent)
-        return {"intent": session.pending_intent}
+        return session.pending_intent
 
-    if _is_smalltalk_only(msg):
-        _record_intent_state(session_id, session, msg, "smalltalk")
-        return {"intent": "smalltalk"}
+    if _is_smalltalk_only(message):
+        return "smalltalk"
 
-    _record_intent_state(session_id, session, msg, "kb_query")
-    return {"intent": "kb_query"}
+    return "kb_query"
+
+
+def _forced_transaction_intent(session, message: str) -> Optional[Intent]:
+    pending = session.pending_intent
+    if pending not in {"book_appointment", "reschedule_appointment", "cancel_appointment", "list_appointments"}:
+        return None
+
+    if session.awaiting_confirmation:
+        return pending
+
+    if _looks_like_transaction_followup(message):
+        return pending
+
+    return None
+
+
+def _looks_like_transaction_followup(message: str) -> bool:
+    msg = (message or "").strip().lower()
+    if not msg:
+        return False
+    if parse_confirmation_response(msg) is not None:
+        return True
+    if _extract_email(msg) or _extract_slot(msg):
+        return True
+    if _extract_datetime(msg):
+        return True
+    if _parse_slot_index_choice(msg) is not None:
+        return True
+    if _extract_day_of_month(msg) is not None:
+        return True
+    if _extract_time_parts(msg)[0] is not None:
+        return True
+    if re.search(r"\bAPT-[A-Z0-9]{10}\b", msg.upper()):
+        return True
+    if re.fullmatch(
+        r"\s*(dl_appointment|state_id|renewal|renew|state id|id card|driver license|driver licence|dl)\s*",
+        msg,
+    ):
+        return True
+    return False
+
+
+def _resolve_router_choice(session, message: str, decision: RouteDecision, fallback_intent: Intent) -> Intent:
+    candidate = decision.intent
+    pending = session.pending_intent
+
+    if pending in {"book_appointment", "reschedule_appointment", "cancel_appointment", "list_appointments"}:
+        if candidate in {"kb_query", "smalltalk"} and _looks_like_transaction_followup(message):
+            return pending
+
+    if candidate == "book_appointment" and _is_booking_side_question(message):
+        return "kb_query"
+
+    return candidate
 
 
 def _smalltalk_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:

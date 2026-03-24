@@ -32,6 +32,7 @@ class Settings:
     # Providers
     llm_provider: str = ""
     llm_model: str = ""
+    router_model: str = ""
     openai_api_key: str = ""
 
     llm_max_tokens: int = 220
@@ -77,6 +78,8 @@ class Settings:
 
     # Agentic orchestration
     use_langgraph: bool = True
+    use_llm_router: bool = True
+    router_min_confidence: float = 0.65
 
     # Appointment store
     appointments_path: str = ""
@@ -91,6 +94,7 @@ def get_settings() -> Settings:
     return Settings(
         llm_provider=_env("LLM_PROVIDER", "openai"),
         llm_model=_env("LLM_MODEL", "gpt-4o-mini"),
+        router_model=_env("ROUTER_MODEL", _env("LLM_MODEL", "gpt-4o-mini")),
         openai_api_key=_env("OPENAI_API_KEY", ""),
         llm_max_tokens=_env_int("LLM_MAX_TOKENS", 220),
         llm_temperature=_env_float("LLM_TEMPERATURE", 0.2),
@@ -119,6 +123,8 @@ def get_settings() -> Settings:
         rerank_max_doc_chars=_env_int("RERANK_MAX_DOC_CHARS", 900),
         rerank_device=_env("RERANK_DEVICE", "cpu"),
         use_langgraph=_env_bool("USE_LANGGRAPH", True),
+        use_llm_router=_env_bool("USE_LLM_ROUTER", True),
+        router_min_confidence=_env_float("ROUTER_MIN_CONFIDENCE", 0.65),
         appointments_path=_env("APPOINTMENTS_PATH", "data/appointments.json"),
         host=_env("HOST", "0.0.0.0"),
         port=_env_int("PORT", 8000),

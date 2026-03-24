@@ -192,7 +192,7 @@ LANGSMITH_API_KEY=your_key_here
 
 ## Operational Notes
 - Re-run `scripts/ingest_kb.py` after KB content updates.
-- Appointment records are stored in `data/appointments.json` (runtime file).
+- Appointment and session records are stored in the SQLite runtime database under `data/`.
 
 ## Demo
 1. Start API:

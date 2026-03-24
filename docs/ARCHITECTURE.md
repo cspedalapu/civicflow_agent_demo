@@ -37,7 +37,7 @@ policy outcomes can stop, redirect, or defer a flow instead of only logging meta
 
 ## Appointment Tooling
 `core/appointments.py`:
-- persistent JSON store (`data/appointments.json`)
+- SQLite-backed appointment store
 - open-slot listing
 - create booking
 - cancel booking

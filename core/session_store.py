@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from .database import SessionModel, get_db, init_db, _utcnow
@@ -76,6 +77,14 @@ def _prepare_session_updates(kwargs: dict[str, Any]) -> dict[str, Any]:
     return prepared
 
 
+def _iso_or_none(value: Optional[datetime]) -> Optional[str]:
+    if not value:
+        return None
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.isoformat()
+
+
 def _model_to_state(m: SessionModel) -> SessionState:
     return SessionState(
         session_id=m.id,
@@ -102,8 +111,8 @@ def _model_to_state(m: SessionModel) -> SessionState:
         handoff_ticket_id=m.handoff_ticket_id,
         handoff_status=m.handoff_status or "none",
         handoff_assignee=m.handoff_assignee,
-        handoff_claimed_at=m.handoff_claimed_at.isoformat() if m.handoff_claimed_at else None,
-        handoff_resolved_at=m.handoff_resolved_at.isoformat() if m.handoff_resolved_at else None,
+        handoff_claimed_at=_iso_or_none(m.handoff_claimed_at),
+        handoff_resolved_at=_iso_or_none(m.handoff_resolved_at),
         auth_status=m.auth_status or "unknown",
         created_ts=m.created_at.timestamp() if m.created_at else 0.0,
         last_ts=m.updated_at.timestamp() if m.updated_at else 0.0,

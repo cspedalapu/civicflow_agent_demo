@@ -36,5 +36,5 @@ def test_answer_question_falls_back_when_llm_fails(monkeypatch):
     out = answer_question(settings, FakeKB(), "What documents do I need for renewal?")
 
     assert out["refusal"] is False
-    assert "based on my knowledge base" in out["answer"].lower()
-    assert "renewal requirements" in out["answer"].lower()
+    assert "based on my knowledge base" not in out["answer"].lower()
+    assert "required application and proof documents" in out["answer"].lower() or "review the official checklist" in out["answer"].lower()

@@ -93,7 +93,7 @@ macOS/Linux:
 cp .env.example .env
 ```
 
-Then update `.env` values (`OPENAI_API_KEY`, model/provider, reranker, tracing).
+Then update `.env` values (`OPENAI_API_KEY`, model/provider, reranker, optional tracing).
 
 ### 3) Build KB index
 ```bash
@@ -178,7 +178,7 @@ python -c "import torch; print(torch.cuda.is_available())"
 ```
 
 ## Observability (LangSmith)
-Set in `.env`:
+Leave tracing off unless you have a valid LangSmith key. To enable it, set in `.env`:
 ```dotenv
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_PROJECT=civicflow_agent_demo

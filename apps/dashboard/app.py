@@ -685,6 +685,61 @@ def _retrieval_fallback_response(api_url: str, message: str) -> Dict[str, Any] |
     }
 
 
+def _clean_retrieval_preview(text: str) -> str:
+    cleaned = (text or "").replace("“", '"').replace("”", '"').replace("’", "'")
+    cleaned = re.sub(r"https?://\S+", "", cleaned)
+    lines: List[str] = []
+    for raw in cleaned.splitlines():
+        line = raw.strip(" -\t")
+        lower = line.lower()
+        if not line:
+            continue
+        if lower.startswith(("##", "#", "q1.", "q2.", "q3.", "1)", "2)", "3)", "related services", "official links", "recommended wording")):
+            continue
+        if len(line) < 18:
+            continue
+        lines.append(line)
+    return " ".join(lines)
+
+
+def _retrieval_fallback_response(api_url: str, message: str) -> Dict[str, Any] | None:
+    try:
+        data = _call_retrieve(api_url, message=message)
+    except Exception:
+        return None
+
+    hits = data.get("hits") or []
+    if not hits:
+        return None
+
+    top = hits[0]
+    preview = (top.get("preview") or "").strip()
+    if not preview:
+        return None
+
+    similarity = float(top.get("similarity") or 0.0)
+    sources = [
+        {
+            "title": hit.get("title") or hit.get("doc_id") or "Knowledge Base",
+            "source_url": hit.get("source_url") or "",
+            "doc_id": hit.get("doc_id") or "",
+            "similarity": float(hit.get("similarity") or 0.0),
+        }
+        for hit in hits[:3]
+    ]
+    return {
+        "answer": _build_retrieval_fallback_answer(message, hits),
+        "meta": {
+            "intent": "kb_query",
+            "refusal": False,
+            "best_similarity": similarity,
+            "sources": sources,
+            "timings_ms": {},
+            "fallback_mode": "retrieve_only",
+        },
+    }
+
+
 def _call_history(api_url: str, session_id: str, limit: int = 50) -> Dict[str, Any]:
     r = requests.get(f"{api_url}/history/{session_id}", params={"limit": limit}, timeout=30)
     r.raise_for_status()

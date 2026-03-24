@@ -39,6 +39,19 @@ def test_policy_requests_clarification_for_low_evidence_kb_query():
     assert "LOW_EVIDENCE" in decision.reason_codes
 
 
+def test_policy_uses_configurable_clarify_threshold():
+    decision = evaluate_policy(
+        session=SessionState(session_id="s3b"),
+        message="What are the rules?",
+        intent="kb_query",
+        best_similarity=0.3,
+        clarify_min_similarity=0.35,
+    )
+
+    assert decision.needs_clarification is True
+    assert decision.next_action == "clarify"
+
+
 def test_policy_blocks_tool_use_when_confirmation_pending():
     decision = evaluate_policy(
         session=SessionState(session_id="s4", awaiting_confirmation=True, auth_status="verified"),

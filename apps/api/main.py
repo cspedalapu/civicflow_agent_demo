@@ -20,6 +20,7 @@ from core.database import get_db, init_db, ChatMessage, SessionModel, Booking
 from core.logger import ensure_session_id, log_chat_event, get_chat_history
 from core.name_parser import extract_name
 from core.pipeline import ingest
+from core.session_snapshot import build_session_snapshot, get_handoff_queue
 from core.session_store import get_session, update_session
 from core.vectorstore import ChromaKB
 
@@ -124,6 +125,7 @@ def chat(req: ChatRequest) -> Dict[str, Any]:
                 "name": name,
             }
             log_chat_event({"session_id": session_id, "stage": "active", "name": name, "question": msg, "answer": out["answer"]})
+            out["session"] = build_session_snapshot(session_id)
             return out
 
         # Keep the DPS-style name prompt for short/opening messages, but do not block
@@ -137,6 +139,7 @@ def chat(req: ChatRequest) -> Dict[str, Any]:
                 "stage": "awaiting_name",
             }
             log_chat_event({"session_id": session_id, "stage": "awaiting_name", "question": msg, "answer": out["answer"]})
+            out["session"] = build_session_snapshot(session_id)
             return out
 
         update_session(session_id, stage="active")
@@ -150,13 +153,14 @@ def chat(req: ChatRequest) -> Dict[str, Any]:
         out = graph_runner.run(session_id=session_id, message=msg)
     else:
         out = answer_question(settings, kb, msg)
+
+    session = get_session(session_id)
     out["session_id"] = session_id
     out["stage"] = session.stage
     if session.name:
         out["name"] = session.name
-        if out.get("answer"):
+        if out.get("answer") and not out["answer"].startswith(f"{session.name}, "):
             out["answer"] = f"{session.name}, {out['answer']}"
-
     log_chat_event(
         {
             "session_id": session_id,
@@ -170,6 +174,7 @@ def chat(req: ChatRequest) -> Dict[str, Any]:
             "intent": out.get("intent"),
         }
     )
+    out["session"] = build_session_snapshot(session_id)
     return out
 
 
@@ -225,6 +230,16 @@ def history(session_id: str, limit: int = 50) -> Dict[str, Any]:
     return {"events": events}
 
 
+@app.get("/sessions/{session_id}")
+def session_snapshot(session_id: str) -> Dict[str, Any]:
+    return build_session_snapshot(session_id)
+
+
+@app.get("/handoff/queue")
+def handoff_queue(limit: int = 10) -> Dict[str, Any]:
+    return get_handoff_queue(limit=limit)
+
+
 @app.get("/stats")
 def stats() -> Dict[str, Any]:
     """Dashboard analytics: counts of sessions, messages, bookings."""
@@ -233,11 +248,13 @@ def stats() -> Dict[str, Any]:
         total_messages = db.query(ChatMessage).count()
         total_bookings = db.query(Booking).filter(Booking.status == "booked").count()
         total_cancelled = db.query(Booking).filter(Booking.status == "cancelled").count()
+        total_handoffs = db.query(SessionModel).filter(SessionModel.handoff_recommended == True).count()  # noqa: E712
     return {
         "total_sessions": total_sessions,
         "total_messages": total_messages,
         "active_bookings": total_bookings,
         "cancelled_bookings": total_cancelled,
+        "handoffs_recommended": total_handoffs,
     }
 
 

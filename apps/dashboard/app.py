@@ -145,6 +145,167 @@ header[data-testid="stHeader"] {
     margin: .55rem 0 .35rem;
 }
 
+.status-shell {
+    background: linear-gradient(145deg, #ffffff 0%, #eef4ff 100%);
+    border: 1px solid #d5e0f2;
+    border-radius: 1rem;
+    padding: 1rem 1.1rem;
+    margin: .4rem auto 1rem;
+    max-width: 740px;
+    box-shadow: var(--shadow-sm);
+}
+.status-shell.critical {
+    border-color: #c94a4a;
+    background: linear-gradient(145deg, #fff7f7 0%, #fff0f0 100%);
+}
+.status-shell.warning {
+    border-color: #d59a1f;
+    background: linear-gradient(145deg, #fffaf0 0%, #fff4dc 100%);
+}
+.status-shell.success {
+    border-color: #2d8a57;
+    background: linear-gradient(145deg, #f3fbf6 0%, #ebf8f0 100%);
+}
+.status-topline {
+    display: flex;
+    justify-content: space-between;
+    gap: .75rem;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+.status-kicker {
+    color: #5b6f92;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 700;
+}
+.status-headline {
+    color: var(--dps-navy-dark);
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-top: .2rem;
+}
+.status-chip {
+    border-radius: 999px;
+    padding: .25rem .65rem;
+    font-size: .74rem;
+    font-weight: 700;
+    background: rgba(0, 40, 104, .08);
+    color: var(--dps-navy);
+}
+.status-progress-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(0, 24, 69, .10);
+    overflow: hidden;
+    margin: .8rem 0 .55rem;
+}
+.status-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #0a56a8 0%, #2e89ff 100%);
+}
+.status-copy {
+    color: #33435c;
+    font-size: .86rem;
+    line-height: 1.5;
+}
+.status-detail-list {
+    margin-top: .65rem;
+    display: grid;
+    gap: .35rem;
+}
+.status-detail {
+    color: #31425d;
+    font-size: .82rem;
+}
+
+.handoff-shell {
+    background: linear-gradient(145deg, #fff9f2 0%, #fff3e5 100%);
+    border: 1px solid #ebb46a;
+    border-radius: 1rem;
+    padding: .95rem 1rem;
+    margin: 0 auto 1rem;
+    max-width: 740px;
+    box-shadow: var(--shadow-sm);
+}
+.handoff-ticket {
+    color: #9a5b12;
+    font-size: .74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+.handoff-title {
+    color: #7a4300;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: .2rem;
+}
+.handoff-copy {
+    color: #6a4a20;
+    font-size: .84rem;
+    line-height: 1.5;
+    margin-top: .35rem;
+}
+.transcript-list {
+    margin-top: .8rem;
+    display: grid;
+    gap: .45rem;
+}
+.transcript-line {
+    background: rgba(255,255,255,.7);
+    border-radius: .7rem;
+    padding: .55rem .7rem;
+    font-size: .8rem;
+    color: #5f4b2d;
+}
+.transcript-line strong {
+    color: #8a4d00;
+}
+
+.sidebar-card {
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: .8rem;
+    padding: .75rem .8rem;
+    margin-bottom: .6rem;
+}
+.sidebar-card-title {
+    font-size: .76rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 700;
+    color: #d8e4ff;
+    margin-bottom: .35rem;
+}
+.sidebar-card-copy {
+    font-size: .82rem;
+    line-height: 1.45;
+    color: #eef4ff;
+}
+.queue-item {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: .75rem;
+    padding: .7rem .75rem;
+    margin-bottom: .55rem;
+}
+.queue-ticket {
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #ffd796;
+    font-weight: 700;
+}
+.queue-summary {
+    font-size: .8rem;
+    color: #f2f6ff;
+    margin-top: .2rem;
+}
+
 .typing-dots span {
     display: inline-block;
     width: 7px;
@@ -252,6 +413,8 @@ def _init_state() -> None:
     st.session_state.setdefault("user_name", "")
     st.session_state.setdefault("rag_debug_query", "")
     st.session_state.setdefault("rag_hits", [])
+    st.session_state.setdefault("session_snapshot", {})
+    st.session_state.setdefault("handoff_queue", {"count": 0, "items": []})
 
 
 def _queue_prompt(prompt: str) -> None:
@@ -400,6 +563,38 @@ def _call_history(api_url: str, session_id: str, limit: int = 50) -> Dict[str, A
     return r.json()
 
 
+def _call_session_snapshot(api_url: str, session_id: str) -> Dict[str, Any]:
+    r = requests.get(f"{api_url}/sessions/{session_id}", timeout=20)
+    r.raise_for_status()
+    return r.json()
+
+
+def _call_handoff_queue(api_url: str, limit: int = 8) -> Dict[str, Any]:
+    r = requests.get(f"{api_url}/handoff/queue", params={"limit": limit}, timeout=20)
+    r.raise_for_status()
+    return r.json()
+
+
+def _store_session_snapshot(snapshot: Dict[str, Any]) -> None:
+    st.session_state["session_snapshot"] = snapshot or {}
+    if snapshot and snapshot.get("name"):
+        st.session_state["user_name"] = snapshot["name"]
+
+
+def _clear_conversation_state() -> None:
+    st.session_state["session_id"] = ""
+    st.session_state["messages"] = []
+    st.session_state["user_name"] = ""
+    st.session_state["pending_prompt"] = None
+    st.session_state["session_snapshot"] = {}
+
+
+def _tone_class(tone: str) -> str:
+    if tone in {"critical", "warning", "success"}:
+        return tone
+    return "info"
+
+
 def _render_banner() -> None:
     st.markdown(
         """
@@ -437,6 +632,63 @@ def _render_welcome() -> None:
         link_html += f'<a href="{item["url"]}" target="_blank" class="link-card">{item["title"]}</a>'
     link_html += "</div>"
     st.markdown(link_html, unsafe_allow_html=True)
+
+
+def _render_session_status() -> None:
+    snapshot = st.session_state.get("session_snapshot") or {}
+    transaction = snapshot.get("transaction") or {}
+    if not transaction:
+        return
+
+    details = transaction.get("details") or []
+    details_html = "".join(f'<div class="status-detail">{detail}</div>' for detail in details[:5])
+    progress = max(0, min(int(transaction.get("progress") or 0), 100))
+    tone = _tone_class(transaction.get("status_tone", "info"))
+    st.markdown(
+        (
+            f'<div class="status-shell {tone}">'
+            '<div class="status-topline">'
+            '<div>'
+            '<div class="status-kicker">Live Session Status</div>'
+            f'<div class="status-headline">{transaction.get("headline", "Conversation ready")}</div>'
+            "</div>"
+            f'<div class="status-chip">{transaction.get("flow_label", "Conversation")}</div>'
+            "</div>"
+            '<div class="status-progress-track">'
+            f'<div class="status-progress-fill" style="width: {progress}%;"></div>'
+            "</div>"
+            f'<div class="status-copy">{transaction.get("next_step", "")}</div>'
+            f'<div class="status-detail-list">{details_html}</div>'
+            "</div>"
+        ),
+        unsafe_allow_html=True,
+    )
+
+    handoff = snapshot.get("handoff") or {}
+    if not handoff:
+        return
+
+    transcript = handoff.get("recent_messages") or []
+    transcript_html = "".join(
+        (
+            '<div class="transcript-line">'
+            f"<strong>{item.get('role', 'message').title()}:</strong> {item.get('preview', '')}"
+            "</div>"
+        )
+        for item in transcript
+    )
+    st.markdown(
+        (
+            '<div class="handoff-shell">'
+            f'<div class="handoff-ticket">{handoff.get("ticket_id", "HND-READY")} • {handoff.get("status", "ready_for_agent").replace("_", " ")}</div>'
+            f'<div class="handoff-title">{handoff.get("reason", "Human support recommended")}</div>'
+            f'<div class="handoff-copy">{handoff.get("summary", "")}</div>'
+            f'<div class="handoff-copy"><strong>Next step:</strong> {handoff.get("next_step", "")}</div>'
+            f'<div class="transcript-list">{transcript_html}</div>'
+            "</div>"
+        ),
+        unsafe_allow_html=True,
+    )
 
 
 def _render_assistant_meta(meta: Dict[str, Any]) -> None:
@@ -512,7 +764,7 @@ def _render_sidebar() -> None:
         st.markdown("### Settings")
         st.session_state["api_url"] = st.text_input("API Endpoint", value=st.session_state["api_url"])
 
-        c1, c2 = st.columns(2)
+        c1, c2, c3 = st.columns(3)
         with c1:
             if st.button("Health", use_container_width=True):
                 try:
@@ -531,10 +783,22 @@ def _render_sidebar() -> None:
                         data = _call_history(st.session_state["api_url"], session_id=session_id, limit=100)
                         events = data.get("events", [])
                         st.session_state["messages"] = _history_to_messages(events)
+                        if session_id:
+                            _store_session_snapshot(_call_session_snapshot(st.session_state["api_url"], session_id))
                         st.success(f"Loaded {len(events)} events")
                         st.rerun()
                     except Exception as exc:
                         st.error(f"History error: {exc}")
+        with c3:
+            if st.button("Refresh Ops", use_container_width=True):
+                try:
+                    session_id = st.session_state.get("session_id", "")
+                    if session_id:
+                        _store_session_snapshot(_call_session_snapshot(st.session_state["api_url"], session_id))
+                    st.session_state["handoff_queue"] = _call_handoff_queue(st.session_state["api_url"])
+                    st.success("Session and handoff panels refreshed")
+                except Exception as exc:
+                    st.error(f"Refresh error: {exc}")
 
         st.divider()
         st.markdown("### Session")
@@ -546,11 +810,27 @@ def _render_sidebar() -> None:
         if st.session_state.get("user_name"):
             st.markdown(f"**User:** {st.session_state['user_name']}")
 
+        snapshot = st.session_state.get("session_snapshot") or {}
+        transaction = snapshot.get("transaction") or {}
+        if transaction:
+            st.markdown(
+                (
+                    '<div class="sidebar-card">'
+                    '<div class="sidebar-card-title">Transaction Status</div>'
+                    f'<div class="sidebar-card-copy"><strong>{transaction.get("headline", "Conversation ready")}</strong><br>'
+                    f'{transaction.get("next_step", "")}</div>'
+                    "</div>"
+                ),
+                unsafe_allow_html=True,
+            )
+            st.caption(f"Progress: {int(transaction.get('progress') or 0)}%")
+            if snapshot.get("selected_booking_id"):
+                st.caption(f"Booking: {snapshot['selected_booking_id']}")
+            if snapshot.get("pending_booking_email"):
+                st.caption(f"Email: {snapshot['pending_booking_email']}")
+
         if st.button("New Conversation", use_container_width=True):
-            st.session_state["session_id"] = ""
-            st.session_state["messages"] = []
-            st.session_state["user_name"] = ""
-            st.session_state["pending_prompt"] = None
+            _clear_conversation_state()
             st.rerun()
 
         st.divider()
@@ -570,6 +850,33 @@ def _render_sidebar() -> None:
             c3, c4 = st.columns(2)
             c3.metric("Bookings", stats.get("active_bookings", 0))
             c4.metric("Cancelled", stats.get("cancelled_bookings", 0))
+            st.metric("Handoffs", stats.get("handoffs_recommended", 0))
+
+        st.divider()
+        st.markdown("### Handoff Queue")
+        if st.button("Refresh Queue", use_container_width=True):
+            try:
+                st.session_state["handoff_queue"] = _call_handoff_queue(st.session_state["api_url"])
+            except Exception as exc:
+                st.error(f"Queue error: {exc}")
+
+        handoff_queue = st.session_state.get("handoff_queue") or {"count": 0, "items": []}
+        items = handoff_queue.get("items") or []
+        if items:
+            st.caption(f"{handoff_queue.get('count', len(items))} session(s) awaiting human follow-up")
+            for item in items[:4]:
+                st.markdown(
+                    (
+                        '<div class="queue-item">'
+                        f'<div class="queue-ticket">{item.get("ticket_id", "HND")}</div>'
+                        f'<div class="queue-summary"><strong>{item.get("flow_label", "Conversation")}</strong><br>'
+                        f'{item.get("summary", "")}</div>'
+                        "</div>"
+                    ),
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.caption("No handoff sessions captured yet.")
 
         st.divider()
         st.markdown("### Appointments")
@@ -660,6 +967,8 @@ def _handle_user_message(prompt: str) -> None:
         st.session_state["session_id"] = data.get("session_id", st.session_state["session_id"])
         if data.get("name"):
             st.session_state["user_name"] = data["name"]
+        if data.get("session"):
+            _store_session_snapshot(data["session"])
 
         answer = data.get("answer", "")
         meta = {
@@ -685,6 +994,11 @@ def _handle_user_message(prompt: str) -> None:
         _render_assistant_meta(meta)
         _render_quick_actions(answer, meta, key_prefix=f"live_{len(st.session_state['messages'])}")
         st.session_state["messages"].append({"role": "assistant", "content": answer, "meta": meta})
+        if (st.session_state.get("session_snapshot") or {}).get("handoff"):
+            try:
+                st.session_state["handoff_queue"] = _call_handoff_queue(st.session_state["api_url"])
+            except Exception:
+                pass
 
 
 def main() -> None:
@@ -692,6 +1006,7 @@ def main() -> None:
     inject_css()
     _render_banner()
     _render_sidebar()
+    _render_session_status()
 
     has_messages = len(st.session_state["messages"]) > 0
     if not has_messages:

@@ -995,29 +995,16 @@ def _render_session_status() -> None:
 
 
 def _render_assistant_meta(meta: Dict[str, Any]) -> None:
-    parts: List[str] = []
-    if meta.get("intent"):
-        parts.append(f"Intent: {meta['intent']}")
-    if meta.get("best_similarity") is not None:
-        parts.append(f"Confidence: {meta['best_similarity']:.2%}")
-    timings = meta.get("timings_ms") or {}
-    if timings:
-        total_ms = sum(float(v or 0) for v in timings.values())
-        parts.append(f"Latency: {int(total_ms)} ms")
-    if parts:
-        st.caption(" | ".join(parts))
-
     sources = meta.get("sources") or []
     if sources:
         with st.expander("Sources", expanded=False):
             for src in sources:
                 title = src.get("title", "Source")
                 url = src.get("source_url", "")
-                sim = src.get("similarity", 0)
                 link_part = f' - <a href="{url}" target="_blank">link</a>' if url else ""
                 st.markdown(
                     f'<div class="source-card"><strong>{title}</strong>{link_part}'
-                    f"<br>Similarity: {sim:.4f}</div>",
+                    "</div>",
                     unsafe_allow_html=True,
                 )
 
@@ -1280,10 +1267,6 @@ def _handle_user_message(prompt: str) -> None:
                         msg_placeholder.markdown(revealed)
                         time.sleep(0.02)
                 msg_placeholder.markdown(answer)
-                if meta.get("clarification"):
-                    st.caption("Temporary fallback mode: asking a clarifying question before giving a specific DPS answer.")
-                else:
-                    st.caption("Temporary fallback mode: answer assembled from retrieved DPS references.")
                 _render_assistant_meta(meta)
                 st.session_state["messages"].append({"role": "assistant", "content": answer, "meta": meta})
                 return

@@ -76,7 +76,8 @@ def test_session_snapshot_builds_handoff_brief_and_queue_item():
 
     assert handoff is not None
     assert handoff["ticket_id"].startswith("HND-")
-    assert handoff["status"] == "ready_for_agent"
+    assert handoff["status"] == "recommended"
+    assert handoff["status_label"] == "Ready For Agent"
     assert "customer asked for a human agent" in handoff["reason"].lower()
     assert "booking apt-handoff1" in handoff["summary"].lower()
 

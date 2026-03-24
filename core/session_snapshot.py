@@ -15,6 +15,13 @@ _FLOW_LABELS = {
     "handoff": "Human Handoff",
 }
 
+_HANDOFF_STATUS_LABELS = {
+    "recommended": "Ready For Agent",
+    "claimed": "Claimed By Operator",
+    "resolved": "Resolved",
+    "none": "No Handoff",
+}
+
 _REASON_LABELS = {
     "user_requested_human": "Customer asked for a human agent",
     "low_evidence": "Low-evidence knowledge retrieval",
@@ -135,6 +142,8 @@ def _status_tone(session: SessionState) -> str:
 
 
 def _status_headline(session: SessionState) -> str:
+    if session.handoff_status == "claimed":
+        return "Human handoff claimed"
     if session.handoff_recommended:
         return "Human handoff recommended"
     if session.awaiting_confirmation:
@@ -151,6 +160,9 @@ def _status_headline(session: SessionState) -> str:
 
 
 def _next_step(session: SessionState) -> str:
+    if session.handoff_status == "claimed":
+        assignee = session.handoff_assignee or "the assigned operator"
+        return f"{assignee} has claimed this case and should continue from the transcript."
     if session.handoff_recommended:
         return "A human agent should review the transcript and continue from the captured context."
     if session.awaiting_confirmation:
@@ -191,6 +203,10 @@ def _detail_lines(session: SessionState) -> List[str]:
         details.append(f"Last agent action: {_humanize_action(session.last_agent_action)}")
     if session.fallback_reason:
         details.append(f"Attention point: {_humanize_reason(session.fallback_reason)}")
+    if session.handoff_ticket_id:
+        details.append(f"Handoff ticket: {session.handoff_ticket_id}")
+    if session.handoff_assignee:
+        details.append(f"Operator: {session.handoff_assignee}")
     return details
 
 
@@ -235,7 +251,7 @@ def _last_user_message(session_id: str) -> str:
 
 
 def _build_handoff(session_id: str, session: SessionState, recent_messages: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    if not session.handoff_recommended:
+    if not session.handoff_recommended and session.handoff_status != "claimed":
         return None
 
     flow = _flow_label(session.active_flow)
@@ -258,8 +274,10 @@ def _build_handoff(session_id: str, session: SessionState, recent_messages: List
         summary += f" Latest customer request: {issue}"
 
     return {
-        "ticket_id": f"HND-{session_id.replace('-', '').upper()[-8:]}",
-        "status": "ready_for_agent",
+        "ticket_id": session.handoff_ticket_id or f"HND-{session_id.replace('-', '').upper()[-8:]}",
+        "status": session.handoff_status or "recommended",
+        "status_label": _HANDOFF_STATUS_LABELS.get(session.handoff_status or "recommended", "Ready For Agent"),
+        "assignee": session.handoff_assignee,
         "reason": _humanize_reason(session.escalation_reason) or "Customer requested human support",
         "summary": summary,
         "next_step": "Share the transcript and continue with a live DPS support representative.",
@@ -294,7 +312,9 @@ def get_handoff_queue(limit: int = 10) -> Dict[str, Any]:
     with get_db() as db:
         rows = (
             db.query(SessionModel)
-            .filter(SessionModel.handoff_recommended == True)  # noqa: E712
+            .filter(
+                (SessionModel.handoff_recommended == True) | (SessionModel.handoff_status == "claimed")  # noqa: E712
+            )
             .order_by(SessionModel.updated_at.desc())
             .limit(limit)
             .all()
@@ -306,10 +326,13 @@ def get_handoff_queue(limit: int = 10) -> Dict[str, Any]:
         items.append(
             {
                 "session_id": row.id,
-                "ticket_id": f"HND-{row.id.replace('-', '').upper()[-8:]}",
+                "ticket_id": row.handoff_ticket_id or f"HND-{row.id.replace('-', '').upper()[-8:]}",
                 "name": row.name,
                 "flow_label": _flow_label(row.active_flow),
                 "reason": _humanize_reason(row.escalation_reason) or "Customer requested human support",
+                "status": row.handoff_status or "recommended",
+                "status_label": _HANDOFF_STATUS_LABELS.get(row.handoff_status or "recommended", "Ready For Agent"),
+                "assignee": row.handoff_assignee,
                 "summary": _build_queue_summary(row, recent_messages),
                 "updated_at": row.updated_at.isoformat() if row.updated_at else None,
             }

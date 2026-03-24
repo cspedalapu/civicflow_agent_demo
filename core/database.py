@@ -101,6 +101,11 @@ class SessionModel(Base):
     fallback_reason = Column(String(120), nullable=True)
     escalation_reason = Column(String(120), nullable=True)
     handoff_recommended = Column(Boolean, nullable=False, default=False)
+    handoff_ticket_id = Column(String(30), nullable=True)
+    handoff_status = Column(String(30), nullable=False, default="none")
+    handoff_assignee = Column(String(120), nullable=True)
+    handoff_claimed_at = Column(DateTime(timezone=True), nullable=True)
+    handoff_resolved_at = Column(DateTime(timezone=True), nullable=True)
     auth_status = Column(String(40), nullable=False, default="unknown")
     created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow, nullable=False)
@@ -201,6 +206,11 @@ def _ensure_compatible_schema() -> None:
             "fallback_reason": "ALTER TABLE sessions ADD COLUMN fallback_reason VARCHAR(120)",
             "escalation_reason": "ALTER TABLE sessions ADD COLUMN escalation_reason VARCHAR(120)",
             "handoff_recommended": "ALTER TABLE sessions ADD COLUMN handoff_recommended BOOLEAN DEFAULT 0",
+            "handoff_ticket_id": "ALTER TABLE sessions ADD COLUMN handoff_ticket_id VARCHAR(30)",
+            "handoff_status": "ALTER TABLE sessions ADD COLUMN handoff_status VARCHAR(30) DEFAULT 'none'",
+            "handoff_assignee": "ALTER TABLE sessions ADD COLUMN handoff_assignee VARCHAR(120)",
+            "handoff_claimed_at": "ALTER TABLE sessions ADD COLUMN handoff_claimed_at DATETIME",
+            "handoff_resolved_at": "ALTER TABLE sessions ADD COLUMN handoff_resolved_at DATETIME",
             "auth_status": "ALTER TABLE sessions ADD COLUMN auth_status VARCHAR(40) DEFAULT 'unknown'",
         }
         for col, sql in session_migrations.items():

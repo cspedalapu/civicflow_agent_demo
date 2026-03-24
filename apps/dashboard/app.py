@@ -415,6 +415,7 @@ def _init_state() -> None:
     st.session_state.setdefault("rag_hits", [])
     st.session_state.setdefault("session_snapshot", {})
     st.session_state.setdefault("handoff_queue", {"count": 0, "items": []})
+    st.session_state.setdefault("handoff_operator", "Demo Agent")
 
 
 def _queue_prompt(prompt: str) -> None:
@@ -575,6 +576,26 @@ def _call_handoff_queue(api_url: str, limit: int = 8) -> Dict[str, Any]:
     return r.json()
 
 
+def _claim_handoff(api_url: str, session_id: str, assignee: str) -> Dict[str, Any]:
+    r = requests.post(
+        f"{api_url}/handoff/claim/{session_id}",
+        json={"assignee": assignee},
+        timeout=20,
+    )
+    r.raise_for_status()
+    return r.json()
+
+
+def _resolve_handoff(api_url: str, session_id: str, assignee: str) -> Dict[str, Any]:
+    r = requests.post(
+        f"{api_url}/handoff/resolve/{session_id}",
+        json={"assignee": assignee},
+        timeout=20,
+    )
+    r.raise_for_status()
+    return r.json()
+
+
 def _store_session_snapshot(snapshot: Dict[str, Any]) -> None:
     st.session_state["session_snapshot"] = snapshot or {}
     if snapshot and snapshot.get("name"):
@@ -680,7 +701,7 @@ def _render_session_status() -> None:
     st.markdown(
         (
             '<div class="handoff-shell">'
-            f'<div class="handoff-ticket">{handoff.get("ticket_id", "HND-READY")} • {handoff.get("status", "ready_for_agent").replace("_", " ")}</div>'
+            f'<div class="handoff-ticket">{handoff.get("ticket_id", "HND-READY")} • {handoff.get("status_label", handoff.get("status", "ready_for_agent").replace("_", " "))}</div>'
             f'<div class="handoff-title">{handoff.get("reason", "Human support recommended")}</div>'
             f'<div class="handoff-copy">{handoff.get("summary", "")}</div>'
             f'<div class="handoff-copy"><strong>Next step:</strong> {handoff.get("next_step", "")}</div>'
@@ -689,6 +710,32 @@ def _render_session_status() -> None:
         ),
         unsafe_allow_html=True,
     )
+
+    session_id = snapshot.get("session_id") or st.session_state.get("session_id")
+    operator = st.session_state.get("handoff_operator", "Demo Agent")
+    col1, col2 = st.columns(2)
+    with col1:
+        if handoff.get("status") == "recommended":
+            if st.button("Claim Handoff", key="claim_handoff_btn", use_container_width=True):
+                try:
+                    data = _claim_handoff(st.session_state["api_url"], session_id, operator)
+                    _store_session_snapshot(data.get("session", {}))
+                    st.session_state["handoff_queue"] = _call_handoff_queue(st.session_state["api_url"])
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"Claim failed: {exc}")
+        else:
+            st.caption(f"Claimed by: {handoff.get('assignee') or operator}")
+    with col2:
+        if handoff.get("status") in {"recommended", "claimed"}:
+            if st.button("Resolve Handoff", key="resolve_handoff_btn", use_container_width=True):
+                try:
+                    data = _resolve_handoff(st.session_state["api_url"], session_id, operator)
+                    _store_session_snapshot(data.get("session", {}))
+                    st.session_state["handoff_queue"] = _call_handoff_queue(st.session_state["api_url"])
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"Resolve failed: {exc}")
 
 
 def _render_assistant_meta(meta: Dict[str, Any]) -> None:
@@ -810,6 +857,11 @@ def _render_sidebar() -> None:
         if st.session_state.get("user_name"):
             st.markdown(f"**User:** {st.session_state['user_name']}")
 
+        st.session_state["handoff_operator"] = st.text_input(
+            "Operator Name",
+            value=st.session_state.get("handoff_operator", "Demo Agent"),
+        )
+
         snapshot = st.session_state.get("session_snapshot") or {}
         transaction = snapshot.get("transaction") or {}
         if transaction:
@@ -851,6 +903,7 @@ def _render_sidebar() -> None:
             c3.metric("Bookings", stats.get("active_bookings", 0))
             c4.metric("Cancelled", stats.get("cancelled_bookings", 0))
             st.metric("Handoffs", stats.get("handoffs_recommended", 0))
+            st.metric("Claimed", stats.get("handoffs_claimed", 0))
 
         st.divider()
         st.markdown("### Handoff Queue")
@@ -870,6 +923,7 @@ def _render_sidebar() -> None:
                         '<div class="queue-item">'
                         f'<div class="queue-ticket">{item.get("ticket_id", "HND")}</div>'
                         f'<div class="queue-summary"><strong>{item.get("flow_label", "Conversation")}</strong><br>'
+                        f'{item.get("status_label", item.get("status", "recommended"))}<br>'
                         f'{item.get("summary", "")}</div>'
                         "</div>"
                     ),

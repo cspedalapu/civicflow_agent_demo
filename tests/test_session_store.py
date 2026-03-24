@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 
 from core.session_store import get_session, session_to_dict, update_session
 
@@ -22,6 +23,11 @@ def test_session_store_persists_rich_task_state():
         fallback_reason="low_evidence",
         escalation_reason="user_requested_human",
         handoff_recommended=True,
+        handoff_ticket_id="HND-TEST1234",
+        handoff_status="claimed",
+        handoff_assignee="Morgan",
+        handoff_claimed_at=datetime(2026, 3, 23, 10, 0, tzinfo=timezone.utc),
+        handoff_resolved_at=None,
         auth_status="verified",
     )
 
@@ -44,7 +50,12 @@ def test_session_store_persists_rich_task_state():
     assert session.fallback_reason == "low_evidence"
     assert session.escalation_reason == "user_requested_human"
     assert session.handoff_recommended is True
+    assert session.handoff_ticket_id == "HND-TEST1234"
+    assert session.handoff_status == "claimed"
+    assert session.handoff_assignee == "Morgan"
+    assert session.handoff_claimed_at == "2026-03-23T10:00:00+00:00"
     assert session.auth_status == "verified"
 
     payload = session_to_dict(session)
     assert payload["last_offered_slots"][0].startswith("renewal |")
+    assert payload["handoff_status"] == "claimed"

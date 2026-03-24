@@ -40,6 +40,11 @@ class SessionState:
     fallback_reason: Optional[str] = None
     escalation_reason: Optional[str] = None
     handoff_recommended: bool = False
+    handoff_ticket_id: Optional[str] = None
+    handoff_status: str = "none"
+    handoff_assignee: Optional[str] = None
+    handoff_claimed_at: Optional[str] = None
+    handoff_resolved_at: Optional[str] = None
     auth_status: str = "unknown"
     created_ts: float = 0.0
     last_ts: float = 0.0
@@ -94,6 +99,11 @@ def _model_to_state(m: SessionModel) -> SessionState:
         fallback_reason=m.fallback_reason,
         escalation_reason=m.escalation_reason,
         handoff_recommended=bool(m.handoff_recommended),
+        handoff_ticket_id=m.handoff_ticket_id,
+        handoff_status=m.handoff_status or "none",
+        handoff_assignee=m.handoff_assignee,
+        handoff_claimed_at=m.handoff_claimed_at.isoformat() if m.handoff_claimed_at else None,
+        handoff_resolved_at=m.handoff_resolved_at.isoformat() if m.handoff_resolved_at else None,
         auth_status=m.auth_status or "unknown",
         created_ts=m.created_at.timestamp() if m.created_at else 0.0,
         last_ts=m.updated_at.timestamp() if m.updated_at else 0.0,
@@ -157,6 +167,11 @@ def session_to_dict(s: SessionState) -> dict:
         "fallback_reason": s.fallback_reason,
         "escalation_reason": s.escalation_reason,
         "handoff_recommended": s.handoff_recommended,
+        "handoff_ticket_id": s.handoff_ticket_id,
+        "handoff_status": s.handoff_status,
+        "handoff_assignee": s.handoff_assignee,
+        "handoff_claimed_at": s.handoff_claimed_at,
+        "handoff_resolved_at": s.handoff_resolved_at,
         "auth_status": s.auth_status,
         "created_ts": s.created_ts,
         "last_ts": s.last_ts,

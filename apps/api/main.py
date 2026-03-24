@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI, Form
+from fastapi import HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel
 
@@ -17,6 +18,7 @@ from core.agent_graph import AgentGraphRunner
 from core.appointments import AppointmentRequest, AppointmentStore
 from core.config import get_settings
 from core.database import get_db, init_db, ChatMessage, SessionModel, Booking
+from core.handoff import claim_handoff, resolve_handoff
 from core.logger import ensure_session_id, log_chat_event, get_chat_history
 from core.name_parser import extract_name
 from core.pipeline import ingest
@@ -44,6 +46,10 @@ class BookingRequest(BaseModel):
     customer_phone: str = ""
     slot: str
     notes: str = ""
+
+
+class HandoffActionRequest(BaseModel):
+    assignee: str = "Demo Agent"
 
 
 @app.get("/health")
@@ -240,6 +246,24 @@ def handoff_queue(limit: int = 10) -> Dict[str, Any]:
     return get_handoff_queue(limit=limit)
 
 
+@app.post("/handoff/claim/{session_id}")
+def claim_handoff_endpoint(session_id: str, req: HandoffActionRequest) -> Dict[str, Any]:
+    try:
+        session = claim_handoff(session_id, assignee=req.assignee)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"status": "ok", "session": build_session_snapshot(session_id), "handoff_status": session.get("handoff_status")}
+
+
+@app.post("/handoff/resolve/{session_id}")
+def resolve_handoff_endpoint(session_id: str, req: HandoffActionRequest) -> Dict[str, Any]:
+    try:
+        session = resolve_handoff(session_id, assignee=req.assignee)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"status": "ok", "session": build_session_snapshot(session_id), "handoff_status": session.get("handoff_status")}
+
+
 @app.get("/stats")
 def stats() -> Dict[str, Any]:
     """Dashboard analytics: counts of sessions, messages, bookings."""
@@ -249,12 +273,14 @@ def stats() -> Dict[str, Any]:
         total_bookings = db.query(Booking).filter(Booking.status == "booked").count()
         total_cancelled = db.query(Booking).filter(Booking.status == "cancelled").count()
         total_handoffs = db.query(SessionModel).filter(SessionModel.handoff_recommended == True).count()  # noqa: E712
+        claimed_handoffs = db.query(SessionModel).filter(SessionModel.handoff_status == "claimed").count()
     return {
         "total_sessions": total_sessions,
         "total_messages": total_messages,
         "active_bookings": total_bookings,
         "cancelled_bookings": total_cancelled,
         "handoffs_recommended": total_handoffs,
+        "handoffs_claimed": claimed_handoffs,
     }
 
 

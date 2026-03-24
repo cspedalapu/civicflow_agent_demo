@@ -10,6 +10,7 @@ from langgraph.graph import END, START, StateGraph
 from .agent import answer_question, build_clarifying_question
 from .appointments import AppointmentRequest, AppointmentStore
 from .config import Settings
+from .handoff import ensure_handoff
 from .name_parser import extract_name
 from .policies import TRANSACTION_INTENTS, evaluate_policy
 from .session_store import get_session, update_session
@@ -154,10 +155,11 @@ def _handoff_response(session_id: str) -> AgentState:
         fallback_reason="user_requested_human",
         awaiting_confirmation=False,
     )
+    ensure_handoff(session_id, reason="user_requested_human")
     return {
         "answer": (
             "A human agent would be the best next step here. "
-            "This demo cannot transfer the conversation directly, but I can pause here so you can continue with DPS support."
+            "I created a handoff ticket so an operator can claim the case and continue from the captured context."
         ),
         "payload": {"refusal": False, "policy": ["USER_REQUESTED_HUMAN"]},
     }
@@ -271,6 +273,11 @@ def _route_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
             fallback_reason=None,
             escalation_reason=None,
             handoff_recommended=False,
+            handoff_ticket_id=None,
+            handoff_status="none",
+            handoff_assignee=None,
+            handoff_claimed_at=None,
+            handoff_resolved_at=None,
         )
         return {"intent": "kb_query"}
 

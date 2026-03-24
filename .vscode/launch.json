@@ -5,6 +5,7 @@
       "name": "CivicFlow API",
       "type": "debugpy",
       "request": "launch",
+      "python": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
       "module": "uvicorn",
       "args": [
         "apps.api.main:app",
@@ -20,7 +21,8 @@
       "name": "CivicFlow Dashboard",
       "type": "debugpy",
       "request": "launch",
-      "module": "streamlit",
+      "python": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+      "module": "streamlit.web.cli",
       "args": [
         "run",
         "apps/dashboard/app.py",

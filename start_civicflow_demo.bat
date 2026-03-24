@@ -7,18 +7,17 @@ for %%I in ("%~dp0.") do set "ROOT=%%~fI"
 if exist "%ROOT%\.venv\Scripts\python.exe" (
     set "PYTHON=%ROOT%\.venv\Scripts\python.exe"
 ) else (
+    where python >nul 2>nul
+    if errorlevel 1 (
+        echo Could not find Python runtime.
+        echo Activate or create the virtual environment first, then try again.
+        pause
+        exit /b 1
+    )
     set "PYTHON=python"
 )
 
 if /I "%~1"=="--dry-run" goto dry_run
-
-where "%PYTHON%" >nul 2>nul
-if errorlevel 1 (
-    echo Could not find Python runtime: %PYTHON%
-    echo Activate or create the virtual environment first, then try again.
-    pause
-    exit /b 1
-)
 
 echo Clearing any old CivicFlow processes on ports 8000 and 8501...
 for /f "tokens=5" %%P in ('netstat -ano ^| findstr ":8000" ^| findstr "LISTENING"') do taskkill /PID %%P /F >nul 2>nul

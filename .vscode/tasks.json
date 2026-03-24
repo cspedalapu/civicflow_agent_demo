@@ -4,13 +4,10 @@
     {
       "label": "Start CivicFlow Demo",
       "type": "shell",
-      "command": "powershell",
+      "command": "cmd",
       "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}\\scripts\\start_demo_local.ps1"
+        "/c",
+        "start_civicflow_demo.bat"
       ],
       "options": {
         "cwd": "${workspaceFolder}"

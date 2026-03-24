@@ -86,6 +86,8 @@ def make_chunks(
         cleaned_part = clean_user_facing_text(part)
         if not cleaned_part:
             continue
+        if infer_content_audience(title=title, text=cleaned_part) == "internal":
+            continue
         cid = f"{doc_id}::chunk{i:04d}"
         md = dict(metadata)
         md.update(

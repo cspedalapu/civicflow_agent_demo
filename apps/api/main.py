@@ -133,10 +133,20 @@ def _strip_explicit_name_clause(text: str, name: str) -> str:
         return (text or "").strip()
 
     pattern = re.compile(
-        rf"^\s*(?:my name is|i am|i'm|this is|call me)\s+{re.escape(name)}(?:\s*[,.!?-]\s*|\s+and\s+|\s+)?",
+        rf"^\s*(?:(?:hi|hello|hey)\s*[,.\-!]?\s*)?(?:my name is|i am|i'm|this is|call me)\s+{re.escape(name)}(?:\s*[,.!?-]\s*|\s+and\s+|\s+)?",
         re.IGNORECASE,
     )
     cleaned = pattern.sub("", text, count=1).strip()
+    if cleaned != text.strip():
+        return cleaned
+
+    match = re.search(
+        rf"\b(?:my name is|i am|i'm|this is|call me)\s+{re.escape(name)}(?:\s*[,.!?-]\s*|\s+and\s+|\s+)?",
+        text,
+        re.IGNORECASE,
+    )
+    if match:
+        return text[match.end():].strip()
     return cleaned
 
 

@@ -293,12 +293,14 @@ def retrieve_debug(req: ChatRequest) -> Dict[str, Any]:
     hits = retrieve(settings, kb, req.message)
     out = []
     for h in hits[:5]:
+        meta = h.get("metadata") or {}
         out.append(
             {
                 "similarity": h.get("similarity"),
                 "distance": h.get("distance"),
-                "title": (h.get("metadata") or {}).get("title"),
-                "doc_id": (h.get("metadata") or {}).get("doc_id"),
+                "title": meta.get("title"),
+                "doc_id": meta.get("doc_id"),
+                "source_url": meta.get("source_url") or meta.get("source") or meta.get("url") or "",
                 "preview": (h.get("text") or "")[:400],
             }
         )

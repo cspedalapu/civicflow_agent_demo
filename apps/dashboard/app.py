@@ -558,6 +558,76 @@ def _call_retrieve(api_url: str, message: str) -> Dict[str, Any]:
     return r.json()
 
 
+def _fallback_lead(question: str) -> str:
+    q = (question or "").strip().lower()
+    if any(token in q for token in ("document", "documents", "what to bring", "carry", "bring")):
+        return (
+            "For a first-time Texas driver license or ID visit, you should bring the required application and proof "
+            "documents DPS asks for, and review the official \"what to bring\" checklist before going to the office."
+        )
+    if any(token in q for token in ("book", "schedule", "appointment")):
+        return "To book a DPS appointment, use the official appointment information page and then the scheduler site."
+    if "renew" in q and "online" in q:
+        return "Texas DPS does offer online renewal for eligible licenses, although eligibility depends on the applicant's situation."
+    if "cdl" in q or "commercial" in q:
+        return "CDL requirements depend on the license class and endorsements you need."
+    if "state id" in q or "identification card" in q or "id card" in q:
+        return "For a Texas ID card visit, DPS expects you to bring the required identity and residency documents for the office appointment."
+    return "Here is the best answer I could assemble from the DPS knowledge base."
+
+
+def _clean_retrieval_preview(text: str) -> str:
+    cleaned = (text or "").replace("“", '"').replace("”", '"').replace("’", "'")
+    cleaned = re.sub(r"https?://\S+", "", cleaned)
+    lines: List[str] = []
+    for raw in cleaned.splitlines():
+        line = raw.strip(" -\t")
+        lower = line.lower()
+        if not line:
+            continue
+        if lower.startswith(("##", "#", "q1.", "q2.", "q3.", "1)", "2)", "3)", "related services", "official links", "recommended wording")):
+            continue
+        if len(line) < 18:
+            continue
+        lines.append(line)
+    return " ".join(lines)
+
+
+def _answer_sentences_from_hits(hits: List[Dict[str, Any]], limit: int = 2) -> List[str]:
+    sentences: List[str] = []
+    seen: set[str] = set()
+    for hit in hits[:3]:
+        cleaned = _clean_retrieval_preview(hit.get("preview") or "")
+        for piece in re.split(r"(?<=[.!?])\s+", cleaned):
+            sentence = piece.strip()
+            normalized = sentence.lower()
+            if len(sentence) < 35:
+                continue
+            if normalized in seen or normalized.endswith("?"):
+                continue
+            if "must share both" in normalized:
+                continue
+            if normalized.startswith(("if a customer requests", "checklist pdf", "appointment scheduler", "appointment information page")):
+                continue
+            seen.add(normalized)
+            sentences.append(sentence)
+            if len(sentences) >= limit:
+                return sentences
+    return sentences
+
+
+def _build_retrieval_fallback_answer(question: str, hits: List[Dict[str, Any]]) -> str:
+    lead = _fallback_lead(question)
+    supporting = _answer_sentences_from_hits(hits, limit=2)
+    if not supporting:
+        return lead
+
+    merged = " ".join(supporting)
+    if merged.lower() in lead.lower():
+        return lead
+    return f"{lead}\n\n{merged}"
+
+
 def _retrieval_fallback_response(api_url: str, message: str) -> Dict[str, Any] | None:
     try:
         data = _call_retrieve(api_url, message=message)
@@ -572,6 +642,28 @@ def _retrieval_fallback_response(api_url: str, message: str) -> Dict[str, Any] |
     preview = (top.get("preview") or "").strip()
     if not preview:
         return None
+
+    similarity = float(top.get("similarity") or 0.0)
+    sources = [
+        {
+            "title": hit.get("title") or hit.get("doc_id") or "Knowledge Base",
+            "source_url": hit.get("source_url") or "",
+            "doc_id": hit.get("doc_id") or "",
+            "similarity": float(hit.get("similarity") or 0.0),
+        }
+        for hit in hits[:3]
+    ]
+    return {
+        "answer": _build_retrieval_fallback_answer(message, hits),
+        "meta": {
+            "intent": "kb_query",
+            "refusal": False,
+            "best_similarity": similarity,
+            "sources": sources,
+            "timings_ms": {},
+            "fallback_mode": "retrieve_only",
+        },
+    }
 
     title = top.get("title") or top.get("doc_id") or "Knowledge Base"
     similarity = float(top.get("similarity") or 0.0)
@@ -1044,13 +1136,12 @@ def _handle_user_message(prompt: str) -> None:
 
         try:
             data = _call_chat(st.session_state["api_url"], st.session_state["session_id"], prompt)
-        except Exception as exc:
+        except Exception:
             typing_placeholder.empty()
             fallback = _retrieval_fallback_response(st.session_state["api_url"], prompt)
             if fallback:
                 answer = fallback["answer"]
                 meta = fallback["meta"]
-                st.info("The main assistant had a temporary issue, so I used retrieval fallback for this answer.")
                 msg_placeholder = st.empty()
                 revealed = ""
                 words = answer.split(" ")
@@ -1060,6 +1151,7 @@ def _handle_user_message(prompt: str) -> None:
                         msg_placeholder.markdown(revealed)
                         time.sleep(0.02)
                 msg_placeholder.markdown(answer)
+                st.caption("Temporary fallback mode: answer assembled from retrieved DPS references.")
                 _render_assistant_meta(meta)
                 st.session_state["messages"].append({"role": "assistant", "content": answer, "meta": meta})
                 return

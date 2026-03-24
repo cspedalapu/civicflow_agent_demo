@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Dict, Any, List
 import re
 
+from .kb_quality import infer_content_audience, normalize_kb_text
 from .utils import read_text, read_json, sha256_text, write_json
 
 
@@ -125,14 +126,14 @@ def _safe_doc_filename(doc_id: str) -> str:
 def extract_one(path: Path, source_root: Path | None = None) -> ExtractedDoc:
     suffix = path.suffix.lower()
     if suffix in {".md", ".txt"}:
-        text = read_text(path).strip()
+        text = normalize_kb_text(read_text(path))
         meta = {"source_file": path.name, "source_type": suffix.lstrip(".")}
         title = path.stem
     elif suffix == ".json":
         raw = read_json(path)
         meta = raw if isinstance(raw, dict) else {"raw_json": raw}
         title = str(meta.get("title") or path.stem)
-        text = _json_to_text(meta, title)
+        text = normalize_kb_text(_json_to_text(meta, title))
         if not text:
             text = f"Metadata-only document. Title: {title}. Source URL: {meta.get('source_url','')}."
             meta["metadata_only"] = True
@@ -145,6 +146,7 @@ def extract_one(path: Path, source_root: Path | None = None) -> ExtractedDoc:
     meta.setdefault("doc_id", doc_id)
     meta.setdefault("source_file", path.name)
     meta.setdefault("source_type", suffix.lstrip("."))
+    meta.setdefault("content_audience", infer_content_audience(title=title, text=text))
     meta["text_hash"] = sha256_text(text)
     return ExtractedDoc(doc_id=doc_id, title=title, text=text, metadata=meta)
 

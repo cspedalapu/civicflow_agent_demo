@@ -81,3 +81,16 @@ def test_extract_one_keeps_notes_and_structured_fields(tmp_path: Path):
     assert "official service catalog." in text
     assert "additional structured fields" in text
     assert "appointments" in text
+
+
+def test_extract_one_normalizes_dirty_text_and_sets_audience(tmp_path: Path):
+    src = tmp_path / "dirty.md"
+    src.write_text(
+        "# FAQ\nEmail DriverLicenseErrors@dps.texas.gov for assistance. :contentReference[oaicite:0]{index=0}\n",
+        encoding="utf-8",
+    )
+
+    doc = extract_one(src, source_root=tmp_path)
+
+    assert ":contentReference" not in doc.text
+    assert doc.metadata["content_audience"] == "end_user"

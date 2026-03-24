@@ -6,6 +6,7 @@ from typing import Any, Dict, List
 
 from .config import Settings
 from .guardrails import enough_evidence
+from .kb_quality import filter_user_facing_hits
 from .llm import LLMClient, extractive_fallback
 from .reranker import rerank_hits
 from .retriever import retrieve
@@ -64,16 +65,81 @@ def build_clarifying_question(question: str) -> str:
     if "appointment" in q or "schedule" in q or "book" in q:
         return "Is this appointment for a Driver License, a State ID, or another service?"
     if "id" in q and ("state" in q or "identification" in q):
-        return "Are you applying for a first-time State ID, or renewing/replacing an existing one?"
+        return "Are you asking about ID documents, appointments, renewal, replacement, or something else?"
     if "license" in q:
-        return "Is this for a first-time Driver License, a renewal, or a replacement?"
+        return "Are you asking about driver license documents, renewal, appointments, replacement, fees, or something else?"
     return "Can you share the exact DPS service you want help with?"
+
+
+def _is_broad_knowledge_question(question: str) -> bool:
+    q = (question or "").strip().lower()
+    if not q:
+        return True
+
+    broad_markers = (
+        "i have question",
+        "i have a question",
+        "i have quick question",
+        "i have a quick question",
+        "quick question",
+        "need information",
+        "tell me about",
+        "question about",
+        "question on",
+        "help with",
+    )
+    specific_markers = (
+        "document",
+        "documents",
+        "what to bring",
+        "carry",
+        "appointment",
+        "book",
+        "schedule",
+        "renew",
+        "renewal",
+        "replace",
+        "replacement",
+        "fee",
+        "fees",
+        "cost",
+        "cdl",
+        "commercial",
+        "online",
+        "test",
+        "exam",
+        "apply",
+        "application",
+        "eligibility",
+        "cancel",
+        "reschedule",
+    )
+    domain_terms = ("driver license", "license", "state id", "identification card", "id card")
+
+    if any(marker in q for marker in broad_markers) and not any(marker in q for marker in specific_markers):
+        return True
+    if "question" in q and not any(marker in q for marker in specific_markers):
+        return True
+    if any(term in q for term in domain_terms) and not any(marker in q for marker in specific_markers):
+        return True
+    return False
 
 
 def answer_question(settings: Settings, kb, question: str) -> Dict[str, Any]:
     t0 = perf_counter()
 
+    if _is_broad_knowledge_question(question):
+        return {
+            "answer": build_clarifying_question(question),
+            "refusal": False,
+            "clarification": True,
+            "best_similarity": 0.0,
+            "sources": [],
+            "timings_ms": {"retrieve_ms": 0.0, "rerank_ms": 0.0},
+        }
+
     hits = retrieve(settings, kb, question, top_k=settings.retrieve_top_n)
+    hits = filter_user_facing_hits(hits)
     t1 = perf_counter()
 
     if settings.use_reranker:

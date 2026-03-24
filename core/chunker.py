@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import List, Dict, Any
 import re
 
+from .kb_quality import clean_user_facing_text, infer_content_audience
 
 @dataclass
 class Chunk:
@@ -82,9 +83,19 @@ def make_chunks(
         parts = chunk_text(text, chunk_size=chunk_size, overlap=overlap)
 
     for i, part in enumerate(parts):
+        cleaned_part = clean_user_facing_text(part)
+        if not cleaned_part:
+            continue
         cid = f"{doc_id}::chunk{i:04d}"
         md = dict(metadata)
-        md.update({"doc_id": doc_id, "title": title, "chunk_index": i})
-        out.append(Chunk(chunk_id=cid, text=part, metadata=md))
+        md.update(
+            {
+                "doc_id": doc_id,
+                "title": title,
+                "chunk_index": i,
+                "content_audience": infer_content_audience(title=title, text=cleaned_part),
+            }
+        )
+        out.append(Chunk(chunk_id=cid, text=cleaned_part, metadata=md))
 
     return out

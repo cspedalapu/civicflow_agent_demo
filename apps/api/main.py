@@ -32,6 +32,7 @@ from core.config import get_settings
 from core.database import get_db, init_db, ChatMessage, SessionModel, Booking
 from core.handoff import claim_handoff, resolve_handoff
 from core.logger import ensure_session_id, log_chat_event, get_chat_history
+from core.kb_quality import filter_user_facing_hits
 from core.name_parser import extract_name
 from core.pipeline import ingest
 from core.session_snapshot import build_session_snapshot, get_handoff_queue
@@ -291,6 +292,7 @@ def retrieve_debug(req: ChatRequest) -> Dict[str, Any]:
     from core.retriever import retrieve
 
     hits = retrieve(settings, kb, req.message)
+    hits = filter_user_facing_hits(hits)
     out = []
     for h in hits[:5]:
         meta = h.get("metadata") or {}

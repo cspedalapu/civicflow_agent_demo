@@ -5,6 +5,7 @@ import re
 from typing import Any, Dict, List
 
 from .config import Settings
+from .kb_quality import clean_user_facing_text, filter_user_facing_hits
 
 
 class LLMClient:
@@ -84,6 +85,7 @@ class LLMClient:
 
 
 def extractive_fallback(question: str, hits: List[Dict[str, Any]]) -> str:
+    hits = filter_user_facing_hits(hits)
     if not hits:
         return "I don't have that information in my knowledge base."
 
@@ -105,7 +107,7 @@ def extractive_fallback(question: str, hits: List[Dict[str, Any]]) -> str:
         return "Here is the best answer I could assemble from the DPS knowledge base."
 
     def _clean_text(text: str) -> str:
-        cleaned = (text or "").replace("“", '"').replace("”", '"').replace("’", "'")
+        cleaned = clean_user_facing_text(text)
         cleaned = re.sub(r"https?://\S+", "", cleaned)
         pieces: List[str] = []
         for raw in cleaned.splitlines():

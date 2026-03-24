@@ -558,6 +558,41 @@ def _call_retrieve(api_url: str, message: str) -> Dict[str, Any]:
     return r.json()
 
 
+def _retrieval_fallback_response(api_url: str, message: str) -> Dict[str, Any] | None:
+    try:
+        data = _call_retrieve(api_url, message=message)
+    except Exception:
+        return None
+
+    hits = data.get("hits") or []
+    if not hits:
+        return None
+
+    top = hits[0]
+    preview = (top.get("preview") or "").strip()
+    if not preview:
+        return None
+
+    title = top.get("title") or top.get("doc_id") or "Knowledge Base"
+    similarity = float(top.get("similarity") or 0.0)
+    answer = (
+        "I hit a temporary issue with the live assistant, but I could still pull this from the knowledge base:\n\n"
+        f"{preview}\n\n"
+        "You can ask a follow-up question and I’ll keep trying through the main assistant."
+    )
+    return {
+        "answer": answer,
+        "meta": {
+            "intent": "kb_query",
+            "refusal": False,
+            "best_similarity": similarity,
+            "sources": [{"title": title, "source_url": "", "doc_id": top.get("doc_id") or "", "similarity": similarity}],
+            "timings_ms": {},
+            "fallback_mode": "retrieve_only",
+        },
+    }
+
+
 def _call_history(api_url: str, session_id: str, limit: int = 50) -> Dict[str, Any]:
     r = requests.get(f"{api_url}/history/{session_id}", params={"limit": limit}, timeout=30)
     r.raise_for_status()
@@ -1011,7 +1046,25 @@ def _handle_user_message(prompt: str) -> None:
             data = _call_chat(st.session_state["api_url"], st.session_state["session_id"], prompt)
         except Exception as exc:
             typing_placeholder.empty()
-            err = f"Could not reach API: {exc}"
+            fallback = _retrieval_fallback_response(st.session_state["api_url"], prompt)
+            if fallback:
+                answer = fallback["answer"]
+                meta = fallback["meta"]
+                st.info("The main assistant had a temporary issue, so I used retrieval fallback for this answer.")
+                msg_placeholder = st.empty()
+                revealed = ""
+                words = answer.split(" ")
+                for idx, word in enumerate(words):
+                    revealed += word + " "
+                    if idx % 4 == 0 or idx == len(words) - 1:
+                        msg_placeholder.markdown(revealed)
+                        time.sleep(0.02)
+                msg_placeholder.markdown(answer)
+                _render_assistant_meta(meta)
+                st.session_state["messages"].append({"role": "assistant", "content": answer, "meta": meta})
+                return
+
+            err = "I couldn't reach the assistant service right now. Please try again in a moment."
             st.error(err)
             st.session_state["messages"].append({"role": "assistant", "content": err, "meta": {}})
             return

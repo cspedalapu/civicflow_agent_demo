@@ -47,3 +47,31 @@ def test_chat_keeps_name_only_turn_as_greeting():
 
     assert out["name"] == "chandra"
     assert "nice to meet you" in out["answer"].lower()
+
+
+def test_chat_falls_back_when_graph_runner_raises(monkeypatch):
+    session_id = f"api-chat-fallback-{uuid.uuid4().hex[:8]}"
+    captured = {}
+
+    def boom(session_id: str, message: str):
+        raise RuntimeError("graph failed")
+
+    def fake_answer_question(settings, kb, question: str):
+        captured["question"] = question
+        return {
+            "answer": "To apply for a Texas driver license, start with the required identity documents.",
+            "refusal": False,
+            "sources": [],
+            "best_similarity": 0.61,
+            "timings_ms": {},
+        }
+
+    monkeypatch.setattr("apps.api.main.graph_runner.run", boom)
+    monkeypatch.setattr("apps.api.main.answer_question", fake_answer_question)
+
+    out = chat(ChatRequest(session_id=session_id, message="How do I apply for a Texas driver license?"))
+
+    assert captured["question"] == "How do I apply for a Texas driver license?"
+    assert "temporary backend issue" not in out["answer"].lower()
+    assert out["intent"] == "kb_query"
+    assert out["pipeline_fallback"] == "graph_runner_error"

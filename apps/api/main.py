@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 import re
@@ -8,6 +10,15 @@ import re
 # ── Load .env BEFORE any core imports so env vars are available ──────────
 from dotenv import load_dotenv
 load_dotenv()
+
+
+def _disable_langsmith_tracing_without_key() -> None:
+    tracing = (os.getenv("LANGCHAIN_TRACING_V2") or "").strip().lower()
+    if tracing in {"1", "true", "yes", "y", "on"} and not (os.getenv("LANGSMITH_API_KEY") or "").strip():
+        os.environ["LANGCHAIN_TRACING_V2"] = "false"
+
+
+_disable_langsmith_tracing_without_key()
 
 from fastapi import FastAPI, Form
 from fastapi import HTTPException
@@ -26,6 +37,8 @@ from core.pipeline import ingest
 from core.session_snapshot import build_session_snapshot, get_handoff_queue
 from core.session_store import get_session, update_session
 from core.vectorstore import ChromaKB
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="civicflow_agent_demo API", version="0.3.0")
 init_db()
@@ -126,6 +139,14 @@ def _strip_explicit_name_clause(text: str, name: str) -> str:
     return cleaned
 
 
+def _safe_session_snapshot(session_id: str) -> Optional[Dict[str, Any]]:
+    try:
+        return build_session_snapshot(session_id)
+    except Exception:
+        logger.exception("Failed to build session snapshot for %s", session_id)
+        return None
+
+
 @app.post("/chat")
 def chat(req: ChatRequest) -> Dict[str, Any]:
     session_id = ensure_session_id(req.session_id)
@@ -147,7 +168,9 @@ def chat(req: ChatRequest) -> Dict[str, Any]:
                     "name": name,
                 }
                 log_chat_event({"session_id": session_id, "stage": "active", "name": name, "question": raw_msg, "answer": out["answer"]})
-                out["session"] = build_session_snapshot(session_id)
+                snapshot = _safe_session_snapshot(session_id)
+                if snapshot is not None:
+                    out["session"] = snapshot
                 return out
             msg = remainder
 
@@ -162,7 +185,9 @@ def chat(req: ChatRequest) -> Dict[str, Any]:
                 "stage": "awaiting_name",
             }
             log_chat_event({"session_id": session_id, "stage": "awaiting_name", "question": msg, "answer": out["answer"]})
-            out["session"] = build_session_snapshot(session_id)
+            snapshot = _safe_session_snapshot(session_id)
+            if snapshot is not None:
+                out["session"] = snapshot
             return out
 
         update_session(session_id, stage="active")
@@ -176,9 +201,37 @@ def chat(req: ChatRequest) -> Dict[str, Any]:
     session = get_session(session_id)
 
     if settings.use_langgraph:
-        out = graph_runner.run(session_id=session_id, message=msg)
+        try:
+            out = graph_runner.run(session_id=session_id, message=msg)
+        except Exception:
+            logger.exception("Graph runner failed for session %s; falling back to direct QA", session_id)
+            try:
+                out = answer_question(settings, kb, msg)
+                out["intent"] = "kb_query"
+                out["pipeline_fallback"] = "graph_runner_error"
+            except Exception:
+                logger.exception("Direct QA fallback failed for session %s", session_id)
+                out = {
+                    "answer": "I hit a temporary backend issue while processing that request. Please try again.",
+                    "refusal": False,
+                    "sources": [],
+                    "timings_ms": {},
+                    "intent": "kb_query",
+                    "temporary_error": True,
+                }
     else:
-        out = answer_question(settings, kb, msg)
+        try:
+            out = answer_question(settings, kb, msg)
+        except Exception:
+            logger.exception("Direct QA pipeline failed for session %s", session_id)
+            out = {
+                "answer": "I hit a temporary backend issue while processing that request. Please try again.",
+                "refusal": False,
+                "sources": [],
+                "timings_ms": {},
+                "intent": "kb_query",
+                "temporary_error": True,
+            }
 
     session = get_session(session_id)
     out["session_id"] = session_id
@@ -200,7 +253,9 @@ def chat(req: ChatRequest) -> Dict[str, Any]:
             "intent": out.get("intent"),
         }
     )
-    out["session"] = build_session_snapshot(session_id)
+    snapshot = _safe_session_snapshot(session_id)
+    if snapshot is not None:
+        out["session"] = snapshot
     return out
 
 

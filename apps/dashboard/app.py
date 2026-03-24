@@ -628,6 +628,66 @@ def _build_retrieval_fallback_answer(question: str, hits: List[Dict[str, Any]]) 
     return f"{lead}\n\n{merged}"
 
 
+def _needs_fallback_clarification(question: str) -> bool:
+    q = (question or "").strip().lower()
+    if not q:
+        return True
+
+    broad_markers = (
+        "i have question",
+        "i have a question",
+        "i need help",
+        "can you help",
+        "tell me about",
+        "information about",
+        "question with",
+        "question about",
+    )
+    specific_markers = (
+        "document",
+        "documents",
+        "what to bring",
+        "carry",
+        "appointment",
+        "book",
+        "schedule",
+        "renew",
+        "renewal",
+        "replace",
+        "replacement",
+        "fee",
+        "fees",
+        "cost",
+        "cdl",
+        "commercial",
+        "online",
+        "test",
+        "exam",
+        "apply",
+        "application",
+        "eligibility",
+        "status",
+        "cancel",
+        "reschedule",
+    )
+    domain_terms = ("driver license", "license", "state id", "identification card", "id card")
+
+    if any(marker in q for marker in broad_markers) and not any(marker in q for marker in specific_markers):
+        return True
+    if any(term in q for term in domain_terms) and not any(marker in q for marker in specific_markers):
+        return True
+    return False
+
+
+def _fallback_clarifying_question(question: str) -> str:
+    q = (question or "").strip().lower()
+    if "license" in q or "driver license" in q:
+        return "Sure, I can help with driver license questions. Do you need help with documents, renewal, appointments, replacement, fees, or something else?"
+    if "state id" in q or "identification card" in q or "id card" in q:
+        return "Sure, I can help with Texas ID card questions. Do you need help with documents, appointments, renewal, replacement, or something else?"
+    return "Sure, I can help. What part do you want help with: documents, appointments, renewal, replacement, fees, or something else?"
+
+
 def _retrieval_fallback_response(api_url: str, message: str) -> Dict[str, Any] | None:
     try:
         data = _call_retrieve(api_url, message=message)
@@ -642,6 +702,20 @@ def _retrieval_fallback_response(api_url: str, message: str) -> Dict[str, Any] |
     preview = (top.get("preview") or "").strip()
     if not preview:
         return None
+
+    if _needs_fallback_clarification(message):
+        return {
+            "answer": _fallback_clarifying_question(message),
+            "meta": {
+                "intent": "kb_query",
+                "refusal": False,
+                "best_similarity": None,
+                "sources": [],
+                "timings_ms": {},
+                "clarification": True,
+                "fallback_mode": "retrieve_clarify",
+            },
+        }
 
     similarity = float(top.get("similarity") or 0.0)
     sources = [

@@ -561,10 +561,9 @@ def _call_retrieve(api_url: str, message: str) -> Dict[str, Any]:
 def _fallback_lead(question: str) -> str:
     q = (question or "").strip().lower()
     if any(token in q for token in ("document", "documents", "what to bring", "carry", "bring")):
-        return (
-            "For a first-time Texas driver license or ID visit, you should bring the required application and proof "
-            "documents DPS asks for, and review the official \"what to bring\" checklist before going to the office."
-        )
+        if "state id" in q or "identification card" in q or "id card" in q:
+            return "For a first-time Texas ID visit, bring the required identity and residency documents and review the official checklist before going to the office."
+        return "For a first-time Texas driver license visit, bring the required identity and residency documents and review the official checklist before going to the office."
     if any(token in q for token in ("book", "schedule", "appointment")):
         return "To book a DPS appointment, use the official appointment information page and then the scheduler site."
     if "renew" in q and "online" in q:
@@ -573,7 +572,7 @@ def _fallback_lead(question: str) -> str:
         return "CDL requirements depend on the license class and endorsements you need."
     if "state id" in q or "identification card" in q or "id card" in q:
         return "For a Texas ID card visit, DPS expects you to bring the required identity and residency documents for the office appointment."
-    return "Here is the best answer I could assemble from the DPS knowledge base."
+    return "Here is the most relevant information I found from the Texas DPS knowledge base."
 
 
 def _clean_retrieval_preview(text: str) -> str:

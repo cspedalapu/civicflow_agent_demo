@@ -2,85 +2,44 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Start API",
-      "type": "process",
-      "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
-      "args": [
-        "-m",
-        "uvicorn",
-        "apps.api.main:app",
-        "--host",
-        "127.0.0.1",
-        "--port",
-        "8000"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "isBackground": true,
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "group": "civicflow"
-      },
-      "problemMatcher": {
-        "owner": "custom",
-        "pattern": [
-          {
-            "regexp": "."
-          }
-        ],
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".",
-          "endsPattern": "Application startup complete\\."
-        }
-      }
-    },
-    {
-      "label": "Start Dashboard",
-      "type": "process",
-      "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
-      "args": [
-        "-m",
-        "streamlit",
-        "run",
-        "apps\\dashboard\\app.py",
-        "--server.headless",
-        "true",
-        "--browser.gatherUsageStats",
-        "false"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "isBackground": true,
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "group": "civicflow"
-      },
-      "problemMatcher": {
-        "owner": "custom",
-        "pattern": [
-          {
-            "regexp": "."
-          }
-        ],
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".",
-          "endsPattern": "(Local URL:|Network URL:)"
-        }
-      }
-    },
-    {
       "label": "Start CivicFlow Demo",
-      "dependsOn": [
-        "Start API",
-        "Start Dashboard"
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$root='${workspaceFolder}'; $py=Join-Path $root '.venv\\Scripts\\python.exe'; if (-not (Test-Path $py)) { throw 'Missing .venv\\Scripts\\python.exe' }; Start-Process -FilePath $py -WorkingDirectory $root -ArgumentList '-m','uvicorn','apps.api.main:app','--host','127.0.0.1','--port','8000'; Start-Process -FilePath $py -WorkingDirectory $root -ArgumentList '-m','streamlit','run','apps\\dashboard\\app.py','--server.headless','true','--browser.gatherUsageStats','false'; Write-Host 'CivicFlow API and dashboard started.'"
       ],
-      "dependsOrder": "parallel"
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Stop CivicFlow Demo",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$ports = 8000,8501; foreach ($p in $ports) { $conns = Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue; foreach ($c in $conns) { taskkill /PID $c.OwningProcess /F | Out-Null } }; Write-Host 'CivicFlow API and dashboard stopped.'"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
     }
   ]
 }

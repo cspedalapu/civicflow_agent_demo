@@ -184,6 +184,10 @@ def _confirmation_prompt(intent: Intent) -> str:
     return "Please reply `yes` to confirm, or `no` to cancel."
 
 
+def _continue_support_prompt() -> str:
+    return "What else can I help you with today?"
+
+
 def _abort_confirmation(session_id: str, intent: Intent) -> AgentState:
     update_session(
         session_id,
@@ -609,7 +613,7 @@ def _book_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
         goal="book_appointment",
         subgoal="completed",
         active_flow="booking",
-        booking_stage="confirmed",
+        booking_stage="completed",
         last_offered_slots=slots[:3],
         selected_slot=requested_slot,
         selected_booking_id=booking["booking_id"],
@@ -624,7 +628,8 @@ def _book_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
             f"Booking ID: {booking['booking_id']}\n"
             f"Service: {booking['service_type']}\n"
             f"Slot: {booking['slot']}\n"
-            f"Email: {booking.get('customer_email', email)}"
+            f"Email: {booking.get('customer_email', email)}\n\n"
+            f"{_continue_support_prompt()}"
         ),
         "payload": {"refusal": False, "booking": booking},
     }
@@ -782,7 +787,7 @@ def _reschedule_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
         goal="reschedule_appointment",
         subgoal="completed",
         active_flow="reschedule",
-        booking_stage="confirmed",
+        booking_stage="completed",
         last_offered_slots=slots[:3],
         selected_slot=requested_slot,
         selected_booking_id=booking["booking_id"],
@@ -797,7 +802,8 @@ def _reschedule_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
             f"Booking ID: {updated['booking_id']}\n"
             f"Service: {updated['service_type']}\n"
             f"New slot: {updated['slot']}\n"
-            f"Email: {updated.get('customer_email', email)}"
+            f"Email: {updated.get('customer_email', email)}\n\n"
+            f"{_continue_support_prompt()}"
         ),
         "payload": {"refusal": False, "booking": updated},
     }
@@ -947,14 +953,17 @@ def _cancel_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
         goal="cancel_appointment",
         subgoal="completed",
         active_flow="cancel",
-        booking_stage="confirmed",
+        booking_stage="completed",
         selected_booking_id=booking_id,
         confirmation_status="confirmed",
         awaiting_confirmation=False,
         last_agent_action="cancelled_appointment",
         fallback_reason=None,
     )
-    return {"answer": f"Your appointment {booking_id} has been cancelled.", "payload": {"refusal": False}}
+    return {
+        "answer": f"Your appointment {booking_id} has been cancelled.\n\n{_continue_support_prompt()}",
+        "payload": {"refusal": False},
+    }
 
 
 def _list_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
@@ -999,7 +1008,10 @@ def _list_node(runner: AgentGraphRunner, state: AgentState) -> AgentState:
         fallback_reason=None,
     )
     lines = [f"- {b['booking_id']} | {b['service_type']} | {b['slot']}" for b in items]
-    return {"answer": "Here are your active appointments:\n" + "\n".join(lines), "payload": {"refusal": False}}
+    return {
+        "answer": "Here are your active appointments:\n" + "\n".join(lines) + f"\n\n{_continue_support_prompt()}",
+        "payload": {"refusal": False},
+    }
 
 
 def _extract_phone(text: str) -> str:

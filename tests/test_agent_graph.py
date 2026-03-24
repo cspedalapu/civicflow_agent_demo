@@ -73,8 +73,9 @@ def test_booking_flow_continues_across_turns(tmp_path: Path):
     assert fourth["intent"] == "book_appointment"
     assert "appointment is confirmed" in fourth["answer"].lower()
     assert "booking id:" in fourth["answer"].lower()
+    assert "what else can i help you with today" in fourth["answer"].lower()
     session = get_session(session_id)
-    assert session.booking_stage == "confirmed"
+    assert session.booking_stage == "completed"
     assert session.confirmation_status == "confirmed"
     assert session.selected_booking_id
 
@@ -286,6 +287,23 @@ def test_booking_allows_side_kb_question_with_service_wording(tmp_path: Path):
         message="Before that I want to know what documents I need for the renewal.",
     )
     assert out["intent"] == "kb_query"
+
+
+def test_booking_completion_allows_continued_conversation(tmp_path: Path):
+    runner = _runner(tmp_path)
+    session_id = f"s9b-{uuid.uuid4().hex[:8]}"
+    open_slot = _ensure_open_slot(runner.appointment_store)
+    service_type = open_slot.split("|", 1)[0].strip()
+
+    runner.run(session_id=session_id, message="My name is Chandra and I want to book an appointment")
+    runner.run(session_id=session_id, message="chandra@example.com")
+    runner.run(session_id=session_id, message=service_type)
+    booked = runner.run(session_id=session_id, message="a")
+
+    assert "what else can i help you with today" in booked["answer"].lower()
+
+    follow_up = runner.run(session_id=session_id, message="what documents do i need for a driving license")
+    assert follow_up["intent"] == "kb_query"
 
 
 def test_smalltalk_thanks_does_not_trigger_kb_clarification(tmp_path: Path):

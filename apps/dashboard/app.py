@@ -635,6 +635,9 @@ def _needs_fallback_clarification(question: str) -> bool:
     broad_markers = (
         "i have question",
         "i have a question",
+        "i have quick question",
+        "i have a quick question",
+        "quick question",
         "i need help",
         "can you help",
         "tell me about",
@@ -672,6 +675,10 @@ def _needs_fallback_clarification(question: str) -> bool:
     domain_terms = ("driver license", "license", "state id", "identification card", "id card")
 
     if any(marker in q for marker in broad_markers) and not any(marker in q for marker in specific_markers):
+        return True
+    if "question" in q and not any(marker in q for marker in specific_markers):
+        return True
+    if len(re.findall(r"[a-z]+", q)) <= 5 and not any(marker in q for marker in specific_markers):
         return True
     if any(term in q for term in domain_terms) and not any(marker in q for marker in specific_markers):
         return True

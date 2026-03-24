@@ -2,16 +2,16 @@
 setlocal
 
 cd /d "%~dp0"
-set "ROOT=%~dp0"
+for %%I in ("%~dp0.") do set "ROOT=%%~fI"
 
-if exist "%ROOT%.venv\Scripts\python.exe" (
-    set "PYTHON=%ROOT%.venv\Scripts\python.exe"
+if exist "%ROOT%\.venv\Scripts\python.exe" (
+    set "PYTHON=%ROOT%\.venv\Scripts\python.exe"
 ) else (
     set "PYTHON=python"
 )
 
-if exist "%ROOT%.venv\Scripts\streamlit.exe" (
-    set "STREAMLIT=%ROOT%.venv\Scripts\streamlit.exe"
+if exist "%ROOT%\.venv\Scripts\streamlit.exe" (
+    set "STREAMLIT=%ROOT%\.venv\Scripts\streamlit.exe"
 ) else (
     set "STREAMLIT=streamlit"
 )

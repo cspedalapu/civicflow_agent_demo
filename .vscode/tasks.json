@@ -10,7 +10,7 @@
         "-ExecutionPolicy",
         "Bypass",
         "-Command",
-        "$root='${workspaceFolder}'; $py=Join-Path $root '.venv\\Scripts\\python.exe'; if (-not (Test-Path $py)) { throw 'Missing .venv\\Scripts\\python.exe' }; Start-Process -FilePath $py -WorkingDirectory $root -ArgumentList '-m','uvicorn','apps.api.main:app','--host','127.0.0.1','--port','8000'; Start-Process -FilePath $py -WorkingDirectory $root -ArgumentList '-m','streamlit','run','apps\\dashboard\\app.py','--server.headless','true','--browser.gatherUsageStats','false'; Write-Host 'CivicFlow API and dashboard started.'"
+        "if (-not (Test-Path '.venv\\Scripts\\python.exe')) { throw 'Missing .venv\\Scripts\\python.exe' }; Start-Process -FilePath '.venv\\Scripts\\python.exe' -WorkingDirectory '${workspaceFolder}' -ArgumentList '-m','uvicorn','apps.api.main:app','--host','127.0.0.1','--port','8000'; Start-Process -FilePath '.venv\\Scripts\\python.exe' -WorkingDirectory '${workspaceFolder}' -ArgumentList '-m','streamlit','run','apps\\dashboard\\app.py','--server.headless','true','--browser.gatherUsageStats','false'; Write-Host 'CivicFlow API and dashboard started.'"
       ],
       "options": {
         "cwd": "${workspaceFolder}"

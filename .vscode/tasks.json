@@ -9,8 +9,8 @@
         "-NoProfile",
         "-ExecutionPolicy",
         "Bypass",
-        "-Command",
-        "if (-not (Test-Path '.venv\\Scripts\\python.exe')) { throw 'Missing .venv\\Scripts\\python.exe' }; Start-Process -FilePath '.venv\\Scripts\\python.exe' -WorkingDirectory '${workspaceFolder}' -ArgumentList '-m','uvicorn','apps.api.main:app','--host','127.0.0.1','--port','8000'; Start-Process -FilePath '.venv\\Scripts\\python.exe' -WorkingDirectory '${workspaceFolder}' -ArgumentList '-m','streamlit','run','apps\\dashboard\\app.py','--server.headless','true','--browser.gatherUsageStats','false'; Write-Host 'CivicFlow API and dashboard started.'"
+        "-File",
+        "${workspaceFolder}\\scripts\\start_demo_local.ps1"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -29,8 +29,8 @@
         "-NoProfile",
         "-ExecutionPolicy",
         "Bypass",
-        "-Command",
-        "$ports = 8000,8501; foreach ($p in $ports) { $conns = Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue; foreach ($c in $conns) { taskkill /PID $c.OwningProcess /F | Out-Null } }; Write-Host 'CivicFlow API and dashboard stopped.'"
+        "-File",
+        "${workspaceFolder}\\scripts\\stop_demo_local.ps1"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
